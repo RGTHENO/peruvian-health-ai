@@ -13,6 +13,8 @@ import { mockEncounters } from "@/data/encounters";
 import type { Encounter } from "@/data/encounters";
 import ConsultationCard from "@/components/ConsultationCard";
 import LabCard from "@/components/LabCard";
+import PrescriptionCard from "@/components/PrescriptionCard";
+import type { ConsultationEncounter } from "@/data/encounters";
 
 const Historial = () => {
   const revealRef = useScrollReveal();
@@ -39,16 +41,6 @@ const Historial = () => {
     });
   }, [search]);
 
-  const allPrescriptions = useMemo(
-    () =>
-      mockEncounters
-        .filter((e): e is Extract<Encounter, { type: "consultation" }> => e.type === "consultation")
-        .flatMap((e) => [
-          ...e.prescriptions.map((p) => ({ ...p, doctor: e.doctor, date: e.date, kind: "med" as const })),
-          ...e.recommendations.map((r) => ({ recommendation: r, doctor: e.doctor, date: e.date, kind: "rec" as const })),
-        ]),
-    [],
-  );
 
   const allLabs = useMemo(
     () =>
@@ -144,44 +136,13 @@ const Historial = () => {
 
             {/* Recetas Tab */}
             <TabsContent value="recetas">
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Fecha</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Detalle</TableHead>
-                        <TableHead className="hidden md:table-cell">Frecuencia</TableHead>
-                        <TableHead className="hidden md:table-cell">Duración</TableHead>
-                        <TableHead>Doctor</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {allPrescriptions.map((item, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="text-muted-foreground whitespace-nowrap">{item.date}</TableCell>
-                          <TableCell>
-                            <Badge variant={item.kind === "med" ? "default" : "secondary"} className="text-xs">
-                              {item.kind === "med" ? "Medicamento" : "Indicación"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {item.kind === "med" ? item.medication : item.recommendation}
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {item.kind === "med" ? item.frequency : "—"}
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {item.kind === "med" ? item.duration : "—"}
-                          </TableCell>
-                          <TableCell>{item.doctor}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              <div className="space-y-4">
+                {mockEncounters
+                  .filter((e): e is ConsultationEncounter => e.type === "consultation")
+                  .map((encounter, i) => (
+                    <PrescriptionCard key={i} encounter={encounter} defaultOpen={i === 0} />
+                  ))}
+              </div>
             </TabsContent>
 
             {/* Lab Tab */}
