@@ -133,9 +133,9 @@ const Historial = () => {
                     </p>
 
                     {encounter.type === "consultation" ? (
-                      <ConsultationCard encounter={encounter} />
+                      <ConsultationCard encounter={encounter} defaultOpen={i === 0} />
                     ) : (
-                      <LabCard encounter={encounter} />
+                      <LabCard encounter={encounter} defaultOpen={i === 0} />
                     )}
                   </div>
                 ))}
