@@ -13,6 +13,7 @@ import DoctorPatients from "./pages/DoctorPatients";
 import DoctorPatientRecord from "./pages/DoctorPatientRecord";
 import DoctorSettings from "./pages/DoctorSettings";
 import DoctorLayout from "./layouts/DoctorLayout";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import Teleconsulta from "./pages/Teleconsulta";
 import Historial from "./pages/Historial";
 import Login from "./pages/Login";
@@ -37,7 +38,7 @@ const App = () => (
           <Route path="/iniciar-sesion" element={<Login />} />
           <Route path="/privacidad" element={<Privacidad />} />
           <Route path="/terminos" element={<Terminos />} />
-          <Route path="/doctor/portal" element={<DoctorLayout />}>
+          <Route path="/doctor/portal" element={<NotificationProvider><DoctorLayout /></NotificationProvider>}>
             <Route index element={<DoctorDashboard />} />
             <Route path="agenda" element={<DoctorAgenda />} />
             <Route path="consulta/:appointmentId" element={<DoctorConsultation />} />
