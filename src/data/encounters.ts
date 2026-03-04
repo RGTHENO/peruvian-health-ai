@@ -265,3 +265,7 @@ export const mockEncounters: Encounter[] = [
     notes: "Procedimiento ambulatorio. Paciente dado de alta el mismo día con buena tolerancia.",
   },
 ];
+
+export function addEncounter(encounter: Encounter) {
+  mockEncounters.unshift(encounter);
+}
