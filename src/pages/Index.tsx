@@ -137,7 +137,7 @@ const Index = () => {
               </Button>
             </Link>
             <Link to="/doctor/portal">
-              <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+              <Button size="lg" variant="secondary">
                 <Stethoscope className="h-4 w-4" />
                 Soy Médico
               </Button>
