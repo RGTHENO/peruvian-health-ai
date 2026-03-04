@@ -112,4 +112,16 @@ export const mockEncounters: Encounter[] = [
     labOrders: ["Test de Helicobacter pylori"],
     notes: "Evaluar resultado del test de H. pylori para definir terapia de erradicación.",
   },
+  {
+    type: "lab",
+    date: "05 Mar 2026",
+    lab: "Laboratorio Suiza Lab",
+    orderedBy: "Dr. Carlos Mendoza",
+    labResults: [
+      { test: "Colesterol LDL", result: "138", referenceRange: "< 130", unit: "mg/dL", status: "Anormal" },
+      { test: "Colesterol HDL", result: "55", referenceRange: "> 40", unit: "mg/dL", status: "Normal" },
+      { test: "Triglicéridos", result: "130", referenceRange: "< 150", unit: "mg/dL", status: "Normal" },
+      { test: "Hemoglobina glicosilada", result: "5.4", referenceRange: "< 5.7", unit: "%", status: "Normal" },
+    ],
+  },
 ];
