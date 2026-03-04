@@ -23,7 +23,7 @@ interface Props {
 function buildPrescriptionText(encounter: ConsultationEncounter, patient?: Patient): string {
   const lines: string[] = [];
 
-  lines.push("🩺 *Receta Médica — SaludPe*");
+  lines.push("*Receta Medica -- SaludPe*");
   lines.push("");
   lines.push(`*Doctor:* ${encounter.doctor} (${encounter.specialty})`);
   lines.push(`*Fecha:* ${encounter.date}`);
@@ -34,31 +34,31 @@ function buildPrescriptionText(encounter: ConsultationEncounter, patient?: Patie
   lines.push("");
 
   if (encounter.prescriptions.length > 0) {
-    lines.push("💊 *Medicamentos:*");
+    lines.push("*Medicamentos:*");
     encounter.prescriptions.forEach((rx, i) => {
-      lines.push(`${i + 1}. ${rx.medication} — ${rx.dosage}, ${rx.frequency}, ${rx.duration}`);
+      lines.push(`${i + 1}. ${rx.medication} -- ${rx.dosage}, ${rx.frequency}, ${rx.duration}`);
     });
     lines.push("");
   }
 
   if (encounter.recommendations.length > 0) {
-    lines.push("📋 *Indicaciones:*");
+    lines.push("*Indicaciones:*");
     encounter.recommendations.forEach((r) => {
-      lines.push(`• ${r}`);
+      lines.push(`- ${r}`);
     });
     lines.push("");
   }
 
   if (encounter.labOrders.length > 0) {
-    lines.push("🔬 *Exámenes solicitados:*");
+    lines.push("*Examenes solicitados:*");
     encounter.labOrders.forEach((o) => {
-      lines.push(`• ${o}`);
+      lines.push(`- ${o}`);
     });
     lines.push("");
   }
 
   if (encounter.notes) {
-    lines.push(`📝 *Notas:* ${encounter.notes}`);
+    lines.push(`*Notas:* ${encounter.notes}`);
     lines.push("");
   }
 
