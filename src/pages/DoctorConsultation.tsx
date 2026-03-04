@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import VoiceDictation from "@/components/VoiceDictation";
 import { appointments, patients } from "@/data/appointments";
-import { mockEncounters, type Prescription, type Encounter } from "@/data/encounters";
+import { mockEncounters, addEncounter, type Prescription, type ConsultationEncounter, type LabEncounter } from "@/data/encounters";
 import { useToast } from "@/hooks/use-toast";
 
 interface LabOrder {
@@ -103,9 +103,63 @@ const DoctorConsultation = () => {
       toast({ title: "Diagnóstico requerido", description: "Ingrese al menos un diagnóstico.", variant: "destructive" });
       return;
     }
-    // In production, this would call an API. For now we show success.
+
+    const today = new Date();
+    const dateStr = today.toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" });
+
+    // Filter valid prescriptions & recommendations
+    const validPrescriptions = prescriptions.filter((p) => p.medication.trim());
+    const validRecommendations = recommendations.filter((r) => r.trim());
+    const validLabOrders = labOrders.filter((l) => l.test.trim());
+
+    // 1. Create the consultation encounter
+    const consultationEncounter: ConsultationEncounter = {
+      type: "consultation",
+      patientId: patient!.id,
+      date: dateStr,
+      doctor: "Dra. María Elena Torres",
+      specialty: appointment!.reason.includes("Cardiología") ? "Cardiología" : "Medicina General",
+      diagnosis: diagnosis.trim(),
+      diagnosisStatus: diagnosisStatus,
+      prescriptions: validPrescriptions,
+      recommendations: validRecommendations,
+      labOrders: validLabOrders.map((l) => l.test),
+      notes: [
+        chiefComplaint && `Motivo: ${chiefComplaint}`,
+        symptoms && `Síntomas: ${symptoms}`,
+        physicalExam && `Examen físico: ${physicalExam}`,
+        notes,
+      ].filter(Boolean).join("\n"),
+    };
+    addEncounter(consultationEncounter);
+
+    // 2. If there are lab orders, create a pending lab encounter
+    if (validLabOrders.length > 0) {
+      const labEncounter: LabEncounter = {
+        type: "lab",
+        patientId: patient!.id,
+        date: dateStr,
+        lab: "Pendiente",
+        orderedBy: "Dra. María Elena Torres",
+        labResults: validLabOrders.map((l) => ({
+          test: l.test,
+          result: "Pendiente",
+          referenceRange: "—",
+          unit: "—",
+          status: "Normal" as const,
+        })),
+      };
+      addEncounter(labEncounter);
+    }
+
+    // 3. Mark appointment as completed
+    const apt = appointments.find((a) => a.id === appointmentId);
+    if (apt) {
+      (apt as any).status = "completada";
+    }
+
     toast({ title: "Consulta guardada", description: "El encuentro clínico ha sido registrado exitosamente." });
-    setTimeout(() => navigate("/doctor/portal/agenda"), 800);
+    setTimeout(() => navigate(`/doctor/portal/pacientes/${patient!.id}`), 800);
   };
 
   if (!appointment || !patient) {
