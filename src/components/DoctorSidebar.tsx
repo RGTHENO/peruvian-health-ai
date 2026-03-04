@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { Heart, LayoutDashboard, CalendarDays, Users, Settings, LogOut } from "lucide-react";
+import { Heart, LayoutDashboard, CalendarDays, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/doctor/portal" },
@@ -40,39 +39,6 @@ const DoctorSidebar = () => {
           );
         })}
       </nav>
-
-      <div className="p-4 border-t border-border space-y-1">
-        <Link
-          to="/doctor/portal/configuracion"
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-            location.pathname === "/doctor/portal/configuracion"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-          )}
-        >
-          <Settings className="h-4 w-4" />
-          Configuración
-        </Link>
-        <Link to="/">
-          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground">
-            <LogOut className="h-4 w-4" />
-            Salir del portal
-          </Button>
-        </Link>
-      </div>
-
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
-            ME
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">Dra. María Elena</p>
-            <p className="text-xs text-muted-foreground truncate">Cardiología</p>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 };
