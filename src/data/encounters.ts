@@ -15,6 +15,7 @@ export interface LabResult {
 
 export interface ConsultationEncounter {
   type: "consultation";
+  patientId: string;
   date: string;
   doctor: string;
   specialty: string;
@@ -28,6 +29,7 @@ export interface ConsultationEncounter {
 
 export interface LabEncounter {
   type: "lab";
+  patientId: string;
   date: string;
   lab: string;
   orderedBy: string;
@@ -36,6 +38,7 @@ export interface LabEncounter {
 
 export interface SurgeryEncounter {
   type: "surgery";
+  patientId: string;
   date: string;
   surgeon: string;
   specialty: string;
@@ -57,8 +60,10 @@ export interface SurgeryEncounter {
 export type Encounter = ConsultationEncounter | LabEncounter | SurgeryEncounter;
 
 export const mockEncounters: Encounter[] = [
+  // Juan Pérez (p1) — hipertensión, diabetes
   {
     type: "consultation",
+    patientId: "p1",
     date: "15 Feb 2026",
     doctor: "Dr. Carlos Mendoza",
     specialty: "Cardiología",
@@ -81,6 +86,7 @@ export const mockEncounters: Encounter[] = [
   },
   {
     type: "lab",
+    patientId: "p1",
     date: "10 Feb 2026",
     lab: "Laboratorio Roe",
     orderedBy: "Dr. Carlos Mendoza",
@@ -93,7 +99,22 @@ export const mockEncounters: Encounter[] = [
     ],
   },
   {
+    type: "lab",
+    patientId: "p1",
+    date: "05 Mar 2026",
+    lab: "Laboratorio Suiza Lab",
+    orderedBy: "Dr. Carlos Mendoza",
+    labResults: [
+      { test: "Colesterol LDL", result: "138", referenceRange: "< 130", unit: "mg/dL", status: "Anormal" },
+      { test: "Colesterol HDL", result: "55", referenceRange: "> 40", unit: "mg/dL", status: "Normal" },
+      { test: "Triglicéridos", result: "130", referenceRange: "< 150", unit: "mg/dL", status: "Normal" },
+      { test: "Hemoglobina glicosilada", result: "5.4", referenceRange: "< 5.7", unit: "%", status: "Normal" },
+    ],
+  },
+  // Ana María López (p2) — asma, rinitis
+  {
     type: "consultation",
+    patientId: "p2",
     date: "03 Ene 2026",
     doctor: "Dra. Ana Gutiérrez",
     specialty: "Medicina General",
@@ -111,8 +132,10 @@ export const mockEncounters: Encounter[] = [
     labOrders: [],
     notes: "Si los síntomas persisten después de 2 semanas, volver para evaluación.",
   },
+  // Roberto García (p3) — arritmia, colesterol, gastritis
   {
     type: "consultation",
+    patientId: "p3",
     date: "15 Nov 2025",
     doctor: "Dr. Roberto Sánchez",
     specialty: "Gastroenterología",
@@ -132,20 +155,10 @@ export const mockEncounters: Encounter[] = [
     labOrders: ["Test de Helicobacter pylori"],
     notes: "Evaluar resultado del test de H. pylori para definir terapia de erradicación.",
   },
-  {
-    type: "lab",
-    date: "05 Mar 2026",
-    lab: "Laboratorio Suiza Lab",
-    orderedBy: "Dr. Carlos Mendoza",
-    labResults: [
-      { test: "Colesterol LDL", result: "138", referenceRange: "< 130", unit: "mg/dL", status: "Anormal" },
-      { test: "Colesterol HDL", result: "55", referenceRange: "> 40", unit: "mg/dL", status: "Normal" },
-      { test: "Triglicéridos", result: "130", referenceRange: "< 150", unit: "mg/dL", status: "Normal" },
-      { test: "Hemoglobina glicosilada", result: "5.4", referenceRange: "< 5.7", unit: "%", status: "Normal" },
-    ],
-  },
+  // Carmen Ríos (p4) — apendicectomía
   {
     type: "surgery",
+    patientId: "p4",
     date: "20 Dic 2025",
     surgeon: "Dr. Javier Morales",
     specialty: "Cirugía General",
@@ -178,8 +191,10 @@ export const mockEncounters: Encounter[] = [
     followUp: "Control en 10 días para retiro de puntos y evaluación post-operatoria",
     notes: "Paciente toleró bien el procedimiento. Alta a las 24 horas sin complicaciones.",
   },
+  // Luis Mendoza (p5) — colecistectomía
   {
     type: "surgery",
+    patientId: "p5",
     date: "15 Ago 2025",
     surgeon: "Dra. Patricia Flores",
     specialty: "Cirugía General",
@@ -213,8 +228,10 @@ export const mockEncounters: Encounter[] = [
     followUp: "Control en 2 semanas con resultados de anatomía patológica",
     notes: "Procedimiento sin complicaciones. Se envió pieza operatoria a anatomía patológica.",
   },
+  // Sofía Castillo (p6) — artroscopia de rodilla
   {
     type: "surgery",
+    patientId: "p6",
     date: "02 Jun 2025",
     surgeon: "Dr. Ricardo Vega",
     specialty: "Traumatología y Ortopedia",

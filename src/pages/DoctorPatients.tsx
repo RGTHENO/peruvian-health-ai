@@ -1,21 +1,14 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Search, Phone, Mail, Calendar, Activity } from "lucide-react";
-import { patients, appointments, type Patient } from "@/data/appointments";
+import { Search } from "lucide-react";
+import { patients } from "@/data/appointments";
 
 const DoctorPatients = () => {
   const [search, setSearch] = useState("");
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const navigate = useNavigate();
 
   const filtered = useMemo(
     () =>
@@ -26,16 +19,6 @@ const DoctorPatients = () => {
           p.conditions.some((c) => c.toLowerCase().includes(search.toLowerCase()))
       ),
     [search]
-  );
-
-  const patientAppointments = useMemo(
-    () =>
-      selectedPatient
-        ? appointments
-            .filter((a) => a.patientId === selectedPatient.id)
-            .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`))
-        : [],
-    [selectedPatient]
   );
 
   return (
@@ -62,7 +45,7 @@ const DoctorPatients = () => {
           <Card
             key={patient.id}
             className="cursor-pointer hover:border-primary/40 transition-colors"
-            onClick={() => setSelectedPatient(patient)}
+            onClick={() => navigate(`/doctor/portal/pacientes/${patient.id}`)}
           >
             <CardContent className="p-5">
               <div className="flex items-start gap-3">
@@ -107,90 +90,6 @@ const DoctorPatients = () => {
           No se encontraron pacientes con ese criterio
         </p>
       )}
-
-      {/* Patient detail dialog */}
-      <Dialog open={!!selectedPatient} onOpenChange={() => setSelectedPatient(null)}>
-        <DialogContent className="max-w-lg">
-          {selectedPatient && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
-                    {selectedPatient.name
-                      .split(" ")
-                      .slice(0, 2)
-                      .map((n) => n[0])
-                      .join("")}
-                  </div>
-                  {selectedPatient.name}
-                </DialogTitle>
-                <DialogDescription>
-                  {selectedPatient.age} años · {selectedPatient.gender === "M" ? "Masculino" : "Femenino"} · {selectedPatient.insurance}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Phone className="h-4 w-4" />
-                    {selectedPatient.phone}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                    {selectedPatient.email}
-                  </div>
-                </div>
-
-                {selectedPatient.conditions.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-foreground mb-2 flex items-center gap-1">
-                      <Activity className="h-4 w-4" /> Condiciones
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedPatient.conditions.map((c) => (
-                        <Badge key={c} variant="secondary">
-                          {c}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <p className="text-sm font-medium text-foreground mb-2 flex items-center gap-1">
-                    <Calendar className="h-4 w-4" /> Historial de citas
-                  </p>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {patientAppointments.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Sin citas registradas</p>
-                    ) : (
-                      patientAppointments.map((apt) => (
-                        <div
-                          key={apt.id}
-                          className="flex items-center justify-between p-2 rounded border border-border text-sm"
-                        >
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {apt.date} — {apt.time}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{apt.reason}</p>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="text-xs"
-                          >
-                            {apt.status}
-                          </Badge>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
