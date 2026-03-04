@@ -1,78 +1,62 @@
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Pill, FlaskConical, Calendar, ClipboardList, Stethoscope } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Stethoscope, Pill, FlaskConical, Calendar, ClipboardList, Search } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
-
-interface Prescription {
-  medication: string;
-  dosage: string;
-  duration: string;
-}
-
-interface LabResult {
-  test: string;
-  result: string;
-  lab: string;
-  status: "Normal" | "Anormal";
-}
-
-interface Encounter {
-  date: string;
-  doctor: string;
-  type: "consultation" | "lab";
-  diagnosis?: string;
-  diagnosisStatus?: "Activo" | "Resuelto";
-  prescriptions?: Prescription[];
-  labs?: LabResult[];
-}
-
-const mockEncounters: Encounter[] = [
-  {
-    date: "15 Feb 2026",
-    doctor: "Dr. Carlos Mendoza",
-    type: "consultation",
-    diagnosis: "Hipertensión arterial leve",
-    diagnosisStatus: "Activo",
-    prescriptions: [
-      { medication: "Losartán 50mg", dosage: "1 vez al día", duration: "3 meses" },
-    ],
-  },
-  {
-    date: "10 Feb 2026",
-    doctor: "Lab. Roe",
-    type: "lab",
-    labs: [
-      { test: "Hemograma completo", result: "Normal", lab: "Lab. Roe", status: "Normal" },
-      { test: "Perfil lipídico", result: "Colesterol LDL elevado", lab: "Lab. Roe", status: "Anormal" },
-    ],
-  },
-  {
-    date: "03 Ene 2026",
-    doctor: "Dra. Ana Gutiérrez",
-    type: "consultation",
-    diagnosis: "Rinitis alérgica estacional",
-    diagnosisStatus: "Resuelto",
-    prescriptions: [
-      { medication: "Loratadina 10mg", dosage: "1 vez al día", duration: "14 días" },
-    ],
-  },
-];
-
-const allPrescriptions = mockEncounters
-  .filter((e) => e.prescriptions)
-  .flatMap((e) => e.prescriptions!.map((p) => ({ ...p, doctor: e.doctor, date: e.date })));
-
-const allLabs = mockEncounters
-  .filter((e) => e.labs)
-  .flatMap((e) => e.labs!.map((l) => ({ ...l, date: e.date })));
+import { mockEncounters } from "@/data/encounters";
+import type { Encounter } from "@/data/encounters";
+import ConsultationCard from "@/components/ConsultationCard";
+import LabCard from "@/components/LabCard";
 
 const Historial = () => {
   const revealRef = useScrollReveal();
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return mockEncounters;
+    const q = search.toLowerCase();
+    return mockEncounters.filter((e) => {
+      if (e.type === "consultation") {
+        return (
+          e.diagnosis.toLowerCase().includes(q) ||
+          e.doctor.toLowerCase().includes(q) ||
+          e.specialty.toLowerCase().includes(q) ||
+          e.prescriptions.some((p) => p.medication.toLowerCase().includes(q)) ||
+          e.recommendations.some((r) => r.toLowerCase().includes(q))
+        );
+      }
+      return (
+        e.lab.toLowerCase().includes(q) ||
+        e.orderedBy.toLowerCase().includes(q) ||
+        e.labResults.some((l) => l.test.toLowerCase().includes(q))
+      );
+    });
+  }, [search]);
+
+  const allPrescriptions = useMemo(
+    () =>
+      mockEncounters
+        .filter((e): e is Extract<Encounter, { type: "consultation" }> => e.type === "consultation")
+        .flatMap((e) => [
+          ...e.prescriptions.map((p) => ({ ...p, doctor: e.doctor, date: e.date, kind: "med" as const })),
+          ...e.recommendations.map((r) => ({ recommendation: r, doctor: e.doctor, date: e.date, kind: "rec" as const })),
+        ]),
+    [],
+  );
+
+  const allLabs = useMemo(
+    () =>
+      mockEncounters
+        .filter((e): e is Extract<Encounter, { type: "lab" }> => e.type === "lab")
+        .flatMap((e) => e.labResults.map((l) => ({ ...l, date: e.date, lab: e.lab }))),
+    [],
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -115,72 +99,44 @@ const Historial = () => {
 
             {/* Timeline Tab */}
             <TabsContent value="consultas">
+              {/* Search */}
+              <div className="relative mb-6">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por diagnóstico, medicamento, doctor..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
               <div className="relative space-y-0">
-                {/* Vertical line */}
                 <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-border" />
 
-                {mockEncounters.map((encounter, i) => (
+                {filtered.length === 0 && (
+                  <p className="text-sm text-muted-foreground pl-10 py-4">No se encontraron resultados.</p>
+                )}
+
+                {filtered.map((encounter, i) => (
                   <div key={i} className="relative pl-10 pb-8 last:pb-0">
-                    {/* Dot */}
                     <div className="absolute left-[9px] top-1.5 h-3 w-3 rounded-full border-2 border-primary bg-background z-10" />
 
-                    {/* Date & Doctor header */}
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
                       <Calendar className="h-3 w-3" />
-                      {encounter.date} · <span className="font-medium text-foreground">{encounter.doctor}</span>
+                      {encounter.date} ·{" "}
+                      <span className="font-medium text-foreground">
+                        {encounter.type === "consultation" ? encounter.doctor : encounter.lab}
+                      </span>
+                      {encounter.type === "consultation" && (
+                        <Badge variant="outline" className="text-xs ml-1">{encounter.specialty}</Badge>
+                      )}
                     </p>
 
-                    <Card>
-                      <CardContent className="p-4 space-y-3">
-                        {/* Diagnosis */}
-                        {encounter.diagnosis && (
-                          <div className="flex items-start gap-2">
-                            <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-medium text-foreground">{encounter.diagnosis}</span>
-                                <Badge
-                                  variant={encounter.diagnosisStatus === "Activo" ? "default" : "secondary"}
-                                  className="text-xs"
-                                >
-                                  {encounter.diagnosisStatus}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Prescriptions */}
-                        {encounter.prescriptions?.map((rx, j) => (
-                          <div key={j} className="flex items-start gap-2">
-                            <Pill className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                            <div>
-                              <p className="text-sm font-medium text-foreground">{rx.medication}</p>
-                              <p className="text-xs text-muted-foreground">{rx.dosage} · {rx.duration}</p>
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* Labs */}
-                        {encounter.labs?.map((lab, j) => (
-                          <div key={j} className="flex items-start gap-2">
-                            <FlaskConical className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-medium text-foreground">{lab.test}</span>
-                                <Badge
-                                  variant={lab.status === "Normal" ? "secondary" : "destructive"}
-                                  className="text-xs"
-                                >
-                                  {lab.result}
-                                </Badge>
-                              </div>
-                              <p className="text-xs text-muted-foreground">{lab.lab}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
+                    {encounter.type === "consultation" ? (
+                      <ConsultationCard encounter={encounter} />
+                    ) : (
+                      <LabCard encounter={encounter} />
+                    )}
                   </div>
                 ))}
               </div>
@@ -194,20 +150,32 @@ const Historial = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Fecha</TableHead>
-                        <TableHead>Medicamento</TableHead>
-                        <TableHead>Dosis</TableHead>
-                        <TableHead>Duración</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Detalle</TableHead>
+                        <TableHead className="hidden md:table-cell">Frecuencia</TableHead>
+                        <TableHead className="hidden md:table-cell">Duración</TableHead>
                         <TableHead>Doctor</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {allPrescriptions.map((rx, i) => (
+                      {allPrescriptions.map((item, i) => (
                         <TableRow key={i}>
-                          <TableCell className="text-muted-foreground">{rx.date}</TableCell>
-                          <TableCell className="font-medium">{rx.medication}</TableCell>
-                          <TableCell>{rx.dosage}</TableCell>
-                          <TableCell>{rx.duration}</TableCell>
-                          <TableCell>{rx.doctor}</TableCell>
+                          <TableCell className="text-muted-foreground whitespace-nowrap">{item.date}</TableCell>
+                          <TableCell>
+                            <Badge variant={item.kind === "med" ? "default" : "secondary"} className="text-xs">
+                              {item.kind === "med" ? "Medicamento" : "Indicación"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {item.kind === "med" ? item.medication : item.recommendation}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {item.kind === "med" ? item.frequency : "—"}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {item.kind === "med" ? item.duration : "—"}
+                          </TableCell>
+                          <TableCell>{item.doctor}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -226,20 +194,26 @@ const Historial = () => {
                         <TableHead>Fecha</TableHead>
                         <TableHead>Estudio</TableHead>
                         <TableHead>Resultado</TableHead>
-                        <TableHead>Laboratorio</TableHead>
+                        <TableHead className="hidden md:table-cell">Rango ref.</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="hidden md:table-cell">Laboratorio</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {allLabs.map((lab, i) => (
                         <TableRow key={i}>
-                          <TableCell className="text-muted-foreground">{lab.date}</TableCell>
+                          <TableCell className="text-muted-foreground whitespace-nowrap">{lab.date}</TableCell>
                           <TableCell className="font-medium">{lab.test}</TableCell>
                           <TableCell>
+                            {lab.unit !== "—" ? `${lab.result} ${lab.unit}` : lab.result}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell text-muted-foreground">{lab.referenceRange}</TableCell>
+                          <TableCell>
                             <Badge variant={lab.status === "Normal" ? "secondary" : "destructive"} className="text-xs">
-                              {lab.result}
+                              {lab.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>{lab.lab}</TableCell>
+                          <TableCell className="hidden md:table-cell">{lab.lab}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
