@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Video, MapPin, ChevronLeft, ChevronRight, Clock, FileText } from "lucide-react";
+import { Video, MapPin, ChevronLeft, ChevronRight, Clock, FileText, Stethoscope } from "lucide-react";
+import { Link } from "react-router-dom";
 import { appointments } from "@/data/appointments";
 import { format, addDays, subDays } from "date-fns";
 import { es } from "date-fns/locale";
@@ -141,6 +142,13 @@ const DoctorAgenda = () => {
                             >
                               {statusLabels[apt.status]}
                             </Badge>
+                            {apt.status !== "cancelada" && apt.status !== "completada" && (
+                              <Link to={`/doctor/portal/consulta/${apt.id}`}>
+                                <Button size="sm" variant="default" className="gap-1 h-7 text-xs">
+                                  <Stethoscope className="h-3 w-3" /> Atender
+                                </Button>
+                              </Link>
+                            )}
                           </div>
                         </div>
                       ) : (
