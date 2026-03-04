@@ -1,105 +1,44 @@
 
 
-## Rediseño del Historial Médico: Modelo de datos realista
+## Rediseño del Tab "Recetas": Agrupación por Consulta
 
-### Problema actual
+### Problema
+La lista plana mezcla medicamentos e indicaciones de todas las consultas sin separación visual. Con muchas citas, se vuelve abrumador e imposible saber qué se recetó en cada visita.
 
-El modelo de datos es demasiado simplista y no refleja la realidad clínica:
-- Una receta puede tener **múltiples medicamentos** + **indicaciones generales** (dieta, ejercicio) + **exámenes de laboratorio solicitados**
-- Un examen de laboratorio incluye **múltiples pruebas** en una sola visita
-- No hay forma de buscar/filtrar encuentros
+### Solución: Cards colapsables por consulta (igual que el tab Consultas)
 
-### Nuevo modelo de datos
-
-```text
-Encounter (Consulta)
-├── date, doctor, specialty
-├── diagnosis: string + status (Activo/Resuelto)
-├── prescriptions[] (medicamentos)
-│   └── { medication, dosage, frequency, duration }
-├── recommendations[] (indicaciones no-farmacológicas)
-│   └── "Evitar ají", "No gaseosas", "Ejercicio 30min/día"
-├── labOrders[] (exámenes solicitados por el médico)
-│   └── "Hemograma", "Perfil lipídico"
-└── notes?: string (observaciones generales)
-
-Encounter (Laboratorio)
-├── date, lab (nombre del laboratorio)
-├── labResults[] (resultados de múltiples exámenes)
-│   └── { test, result, referenceRange, status, unit }
-└── orderedBy?: string (doctor que lo solicitó)
-```
-
-### Diseño UI de la card de consulta (timeline)
+Reutilizar el mismo patrón de cards colapsables del tab Consultas, pero enfocado solo en recetas e indicaciones:
 
 ```text
 ┌──────────────────────────────────────────────────┐
 │ 📅 15 Feb 2026 · Dr. Carlos Mendoza · Cardiología│
+│    3 medicamentos · 5 indicaciones          ▼    │
 ├──────────────────────────────────────────────────┤
-│                                                   │
-│ 🩺 Diagnóstico                                    │
-│    Hipertensión arterial leve [Activo]            │
-│                                                   │
-│ 💊 Medicamentos (3)                               │
-│    ┌──────────────────────────────────────┐       │
-│    │ Losartán 50mg · 1/día · 3 meses     │       │
-│    │ Amlodipino 5mg · 1/día · 3 meses    │       │
-│    │ Aspirina 100mg · 1/día · continuo   │       │
-│    └──────────────────────────────────────┘       │
+│ 💊 Medicamentos                                   │
+│    Losartán 50mg · 1/día · 3 meses               │
+│    Amlodipino 5mg · 1/día · 3 meses             │
+│    Aspirina 100mg · 1/día · continuo             │
 │                                                   │
 │ 📋 Indicaciones                                   │
 │    • Reducir consumo de sal                       │
 │    • Evitar ají y comidas picantes                │
 │    • No consumir gaseosas                         │
 │    • Caminar 30 minutos al día                    │
-│                                                   │
-│ 🧪 Exámenes solicitados                           │
-│    • Hemograma completo                           │
-│    • Perfil lipídico                              │
-│    • Glucosa en ayunas                            │
-│                                                   │
-│ 📝 Notas: Control en 1 mes con resultados        │
-│                                                   │
-│ [📄 Descargar PDF]  [🔗 Compartir]                │
+│    • Control de presión arterial semanal          │
 └──────────────────────────────────────────────────┘
-```
 
-### Card de laboratorio (timeline)
-
-```text
 ┌──────────────────────────────────────────────────┐
-│ 📅 10 Feb 2026 · Lab. Roe                         │
-│ Solicitado por: Dr. Carlos Mendoza               │
-├──────────────────────────────────────────────────┤
-│ 🧪 Resultados (3 exámenes)                        │
-│                                                   │
-│ Hemograma completo         Normal     ✓          │
-│ Perfil lipídico            LDL alto   ⚠          │
-│   └ LDL: 165 mg/dL (ref: <130)                  │
-│ Glucosa en ayunas          Normal     ✓          │
-│   └ 92 mg/dL (ref: 70-100)                      │
-│                                                   │
-│ [📄 Descargar PDF]                                │
+│ 📅 03 Ene 2026 · Dra. Ana Gutiérrez · Med. Gen. │
+│    2 medicamentos · 3 indicaciones          ▼    │
 └──────────────────────────────────────────────────┘
 ```
 
-### Cambios en `Historial.tsx`
+### Cambios
 
-1. **Actualizar interfaces**: Agregar `recommendations[]`, `labOrders[]`, `notes`, `specialty` a consultas. Agregar `referenceRange`, `unit` a lab results. Nuevo tipo `labResults` con `orderedBy`.
-
-2. **Mock data realista**: 3-4 encounters con múltiples medicamentos, indicaciones de dieta/ejercicio, exámenes solicitados, y resultados de lab con rangos de referencia.
-
-3. **Cards expandidas**: Cada sección dentro de la card usa un sub-header con icono + conteo (ej: "Medicamentos (3)"). Las secciones vacías no se muestran.
-
-4. **Botones de acción**: Agregar botones "Descargar PDF" y "Compartir" (disabled/demo) en cada card, alineados con la memoria del proyecto sobre portabilidad.
-
-5. **Barra de búsqueda**: Input de búsqueda sobre la timeline para filtrar encounters por diagnóstico, medicamento o doctor.
-
-6. **Tab Recetas mejorada**: La tabla flat ahora muestra todas las columnas: fecha, medicamento, dosis, frecuencia, duración, doctor. Incluye también las indicaciones generales como filas con badge "Indicación".
-
-7. **Tab Laboratorio mejorada**: Muestra resultados con valor numérico, rango de referencia, unidad, y badge de status con colores (verde normal, rojo anormal).
-
-### Archivos a modificar
-
-- `src/pages/Historial.tsx` — Único archivo: nuevo modelo de datos, cards rediseñadas, búsqueda, botones de acción
+**`src/pages/Historial.tsx`** — Tab "Recetas":
+- Reemplazar la tabla plana por cards colapsables agrupadas por consulta
+- Filtrar solo encounters tipo "consultation"
+- Cada card muestra header con fecha/doctor/conteos, y al expandir muestra medicamentos + indicaciones separados por sección
+- Primera card expandida por defecto, resto colapsadas
+- Mismo estilo visual que el tab Consultas para consistencia
 
