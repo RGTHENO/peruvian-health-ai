@@ -5,14 +5,14 @@ import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Stethoscope, Pill, FlaskConical, Calendar, ClipboardList, Search } from "lucide-react";
+import { Stethoscope, Pill, FlaskConical, Calendar, ClipboardList, Search, Scissors } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { mockEncounters } from "@/data/encounters";
-import type { Encounter } from "@/data/encounters";
+import type { Encounter, ConsultationEncounter, LabEncounter, SurgeryEncounter } from "@/data/encounters";
 import ConsultationCard from "@/components/ConsultationCard";
 import LabCard from "@/components/LabCard";
 import PrescriptionCard from "@/components/PrescriptionCard";
-import type { ConsultationEncounter } from "@/data/encounters";
+import SurgeryCard from "@/components/SurgeryCard";
 
 const Historial = () => {
   const revealRef = useScrollReveal();
@@ -31,13 +31,29 @@ const Historial = () => {
           e.recommendations.some((r) => r.toLowerCase().includes(q))
         );
       }
+      if (e.type === "lab") {
+        return (
+          e.lab.toLowerCase().includes(q) ||
+          e.orderedBy.toLowerCase().includes(q) ||
+          e.labResults.some((l) => l.test.toLowerCase().includes(q))
+        );
+      }
+      // surgery
       return (
-        e.lab.toLowerCase().includes(q) ||
-        e.orderedBy.toLowerCase().includes(q) ||
-        e.labResults.some((l) => l.test.toLowerCase().includes(q))
+        e.procedure.toLowerCase().includes(q) ||
+        e.surgeon.toLowerCase().includes(q) ||
+        e.hospital.toLowerCase().includes(q) ||
+        e.preOpDiagnosis.toLowerCase().includes(q) ||
+        e.postOpDiagnosis.toLowerCase().includes(q)
       );
     });
   }, [search]);
+
+  const getTimelineLabel = (e: Encounter) => {
+    if (e.type === "consultation") return e.doctor;
+    if (e.type === "lab") return e.lab;
+    return e.surgeon;
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -70,6 +86,9 @@ const Historial = () => {
               <TabsTrigger value="consultas" className="gap-1.5">
                 <Stethoscope className="h-4 w-4" /> Consultas
               </TabsTrigger>
+              <TabsTrigger value="cirugias" className="gap-1.5">
+                <Scissors className="h-4 w-4" /> Cirugías
+              </TabsTrigger>
               <TabsTrigger value="recetas" className="gap-1.5">
                 <Pill className="h-4 w-4" /> Recetas
               </TabsTrigger>
@@ -78,9 +97,8 @@ const Historial = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* Timeline Tab */}
+            {/* Timeline Tab - Consultas */}
             <TabsContent value="consultas">
-              {/* Search */}
               <div className="relative mb-6">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -106,20 +124,36 @@ const Historial = () => {
                       <Calendar className="h-3 w-3" />
                       {encounter.date} ·{" "}
                       <span className="font-medium text-foreground">
-                        {encounter.type === "consultation" ? encounter.doctor : encounter.lab}
+                        {getTimelineLabel(encounter)}
                       </span>
                       {encounter.type === "consultation" && (
                         <Badge variant="outline" className="text-xs ml-1">{encounter.specialty}</Badge>
+                      )}
+                      {encounter.type === "surgery" && (
+                        <Badge variant="outline" className="text-xs ml-1">{encounter.procedureType}</Badge>
                       )}
                     </p>
 
                     {encounter.type === "consultation" ? (
                       <ConsultationCard encounter={encounter} defaultOpen={i === 0} />
-                    ) : (
+                    ) : encounter.type === "lab" ? (
                       <LabCard encounter={encounter} defaultOpen={i === 0} />
+                    ) : (
+                      <SurgeryCard encounter={encounter} defaultOpen={i === 0} />
                     )}
                   </div>
                 ))}
+              </div>
+            </TabsContent>
+
+            {/* Cirugías Tab */}
+            <TabsContent value="cirugias">
+              <div className="space-y-4">
+                {mockEncounters
+                  .filter((e): e is SurgeryEncounter => e.type === "surgery")
+                  .map((encounter, i) => (
+                    <SurgeryCard key={i} encounter={encounter} defaultOpen={i === 0} />
+                  ))}
               </div>
             </TabsContent>
 
@@ -138,7 +172,7 @@ const Historial = () => {
             <TabsContent value="laboratorio">
               <div className="space-y-4">
                 {mockEncounters
-                  .filter((e): e is import("@/data/encounters").LabEncounter => e.type === "lab")
+                  .filter((e): e is LabEncounter => e.type === "lab")
                   .map((encounter, i) => (
                     <LabCard key={i} encounter={encounter} defaultOpen={i === 0} />
                   ))}
