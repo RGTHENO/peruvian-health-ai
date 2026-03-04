@@ -1,20 +1,19 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Heart, Sun, Moon } from "lucide-react";
+import { Menu, X, Heart, Sun, Moon, CalendarCheck, MapPin, Video, ChevronDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
-  { label: "Directorio Médico", path: "/directorio" },
-  { label: "Teleconsulta", path: "/teleconsulta" },
-  { label: "Mi Historial", path: "/historial" },
-];
-
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+
+  const isDirectorio = location.pathname === "/directorio";
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
@@ -24,24 +23,45 @@ const Navbar = () => {
           <span className="text-xl font-bold text-foreground font-serif">SaludPe</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) => {
-            const isActive = location.pathname === link.path;
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  "text-sm font-medium transition-colors relative py-1",
-                  isActive
-                    ? "text-primary after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full"
-                    : "text-muted-foreground hover:text-primary"
-                )}
+        <div className="hidden md:flex items-center gap-4">
+          <Link
+            to="/directorio"
+            className={cn(
+              "text-sm font-medium transition-colors relative py-1",
+              isDirectorio
+                ? "text-primary after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full"
+                : "text-muted-foreground hover:text-primary"
+            )}
+          >
+            Directorio Médico
+          </Link>
+
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button size="sm" className="gap-1.5">
+                <CalendarCheck className="h-4 w-4" />
+                Agendar Cita
+                <ChevronDown className="h-3 w-3 opacity-70" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-52 p-2" align="center" sideOffset={8}>
+              <button
+                onClick={() => { setPopoverOpen(false); navigate("/directorio?tipo=presencial"); }}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors"
               >
-                {link.label}
-              </Link>
-            );
-          })}
+                <MapPin className="h-4 w-4 text-primary" />
+                Cita Presencial
+              </button>
+              <button
+                onClick={() => { setPopoverOpen(false); navigate("/directorio?tipo=telemedicina"); }}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors"
+              >
+                <Video className="h-4 w-4 text-primary" />
+                Cita Virtual
+              </button>
+            </PopoverContent>
+          </Popover>
+
           <button
             onClick={toggleTheme}
             className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -50,7 +70,7 @@ const Navbar = () => {
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           <Link to="/iniciar-sesion">
-            <Button size="sm">Iniciar Sesión</Button>
+            <Button size="sm" variant="outline">Iniciar Sesión</Button>
           </Link>
         </div>
 
@@ -70,24 +90,37 @@ const Navbar = () => {
 
       {isOpen && (
         <div className="md:hidden border-t border-border bg-card p-4 space-y-3">
-          {navLinks.map((link) => {
-            const isActive = location.pathname === link.path;
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setIsOpen(false)}
-                className={cn(
-                  "block text-sm font-medium",
-                  isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
-                )}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+          <Link
+            to="/directorio"
+            onClick={() => setIsOpen(false)}
+            className={cn(
+              "block text-sm font-medium",
+              isDirectorio ? "text-primary" : "text-muted-foreground hover:text-primary"
+            )}
+          >
+            Directorio Médico
+          </Link>
+
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-1">Agendar Cita</p>
+          <Link
+            to="/directorio?tipo=presencial"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+          >
+            <MapPin className="h-4 w-4 text-primary" />
+            Cita Presencial
+          </Link>
+          <Link
+            to="/directorio?tipo=telemedicina"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+          >
+            <Video className="h-4 w-4 text-primary" />
+            Cita Virtual
+          </Link>
+
           <Link to="/iniciar-sesion" onClick={() => setIsOpen(false)}>
-            <Button size="sm" className="w-full">Iniciar Sesión</Button>
+            <Button size="sm" className="w-full mt-2">Iniciar Sesión</Button>
           </Link>
         </div>
       )}
