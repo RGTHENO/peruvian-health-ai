@@ -9,6 +9,9 @@ export interface Patient {
   lastVisit: string;
   conditions: string[];
   avatar: string;
+  bloodType?: string;
+  allergies?: string[];
+  emergencyContact?: { name: string; phone: string; relationship: string };
 }
 
 export interface Appointment {
@@ -36,6 +39,9 @@ export const patients: Patient[] = [
     lastVisit: "2026-02-15",
     conditions: ["Hipertensión", "Diabetes tipo 2"],
     avatar: "",
+    bloodType: "O+",
+    allergies: ["Penicilina"],
+    emergencyContact: { name: "María Sánchez", phone: "+51 987 111 222", relationship: "Esposa" },
   },
   {
     id: "p2",
@@ -48,6 +54,9 @@ export const patients: Patient[] = [
     lastVisit: "2026-02-28",
     conditions: ["Asma"],
     avatar: "",
+    bloodType: "A+",
+    allergies: [],
+    emergencyContact: { name: "Carlos López", phone: "+51 912 000 111", relationship: "Hermano" },
   },
   {
     id: "p3",
@@ -60,6 +69,9 @@ export const patients: Patient[] = [
     lastVisit: "2026-01-20",
     conditions: ["Arritmia cardíaca", "Colesterol alto"],
     avatar: "",
+    bloodType: "B+",
+    allergies: ["Sulfonamidas", "Ibuprofeno"],
+    emergencyContact: { name: "Elena García", phone: "+51 945 000 111", relationship: "Esposa" },
   },
   {
     id: "p4",
@@ -72,6 +84,8 @@ export const patients: Patient[] = [
     lastVisit: "2026-03-01",
     conditions: [],
     avatar: "",
+    bloodType: "AB+",
+    allergies: [],
   },
   {
     id: "p5",
@@ -84,6 +98,9 @@ export const patients: Patient[] = [
     lastVisit: "2026-02-10",
     conditions: ["EPOC", "Hipertensión"],
     avatar: "",
+    bloodType: "A-",
+    allergies: ["Aspirina"],
+    emergencyContact: { name: "Rosa Mendoza", phone: "+51 934 000 111", relationship: "Hija" },
   },
   {
     id: "p6",
@@ -96,6 +113,8 @@ export const patients: Patient[] = [
     lastVisit: "2026-02-25",
     conditions: ["Dermatitis atópica"],
     avatar: "",
+    bloodType: "O-",
+    allergies: ["Látex"],
   },
 ];
 
