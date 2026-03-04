@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,14 +7,15 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { User, Bell, Shield } from "lucide-react";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 const DoctorSettings = () => {
-  const [notifications, setNotifications] = useState({
-    newAppointment: true,
-    reminder: true,
-    cancellation: true,
-    marketing: false,
-  });
+  const { preferences, setPreferences, savePreferences } = useNotifications();
+  const [localPrefs, setLocalPrefs] = useState(preferences);
+
+  useEffect(() => {
+    setLocalPrefs(preferences);
+  }, [preferences]);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +23,8 @@ const DoctorSettings = () => {
   };
 
   const handleSaveNotifications = () => {
+    setPreferences(localPrefs);
+    savePreferences();
     toast.success("Preferencias de notificación guardadas");
   };
 
@@ -96,8 +99,8 @@ const DoctorSettings = () => {
                   <p className="text-xs text-muted-foreground">{item.desc}</p>
                 </div>
                 <Switch
-                  checked={notifications[item.key]}
-                  onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, [item.key]: checked }))}
+                  checked={localPrefs[item.key]}
+                  onCheckedChange={(checked) => setLocalPrefs((prev) => ({ ...prev, [item.key]: checked }))}
                 />
               </div>
               {i < arr.length - 1 && <Separator className="mt-4" />}
