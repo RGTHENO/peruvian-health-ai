@@ -1,65 +1,57 @@
 
 
-## Rediseño del Tab Laboratorio + Nuevos Datos de Ejemplo
+## Critical Analysis of Current Lab Card
 
-### Problemas actuales
-1. Solo hay 1 visita al laboratorio -- necesita otra para demostrar agrupación
-2. La presentación actual es densa: la barra de rango con los colores rojo/verde no es intuitiva para una persona mayor. El texto "Ref: < 130" no comunica nada claro
-3. Cada resultado ocupa demasiado espacio vertical con la barra de rango
+Looking at the screenshot, I identify these issues:
 
-### Solución: Diseño simplificado tipo "reporte médico amigable"
+1. **Number "165" is too large** — the `text-xl` creates a jarring size jump vs the test name. It screams "dashboard KPI", not "medical result row"
+2. **"ref < 130 mg/dL" is cryptic** — still too technical. The dot separator `·` gets lost
+3. **Abnormal row background** (`bg-destructive/[0.04]`) is barely visible — the pink tint is too subtle to signal importance
+4. **Status chips are too small** and too far right — they float disconnected from the result they describe
+5. **"Normal" label for Hemograma** is redundant with the green chip — wastes a full row height for minimal info
+6. **Header icon** (flask in gray box) is bland. The `bg-accent` box looks like a placeholder
+7. **Dividers** (`divide-border/30`) are too faint — rows blend together
+8. **"Descargar PDF" button** is orphaned at the bottom with too much padding above
+9. **Overall vertical rhythm** — rows have inconsistent density. Numeric rows are tall, non-numeric rows are short
 
-Cada visita al laboratorio es una card colapsable. Dentro, cada resultado se presenta como una fila simple con un indicador visual claro:
+## Redesign: Modern Clinical Card
+
+Inspired by Apple Health, Headspace, and fintech apps. Key principles:
+- **Consistent row height** regardless of content type
+- **Left color accent strip** on abnormal results instead of full-row tint
+- **Inline status** next to the value, not floating on the far right
+- **Tighter typography scale**: result values at `text-base font-bold`, not `text-xl`
 
 ```text
-┌──────────────────────────────────────────────────────┐
-│ 🧪 10 Feb 2026 · Laboratorio Roe                     │
-│    Dr. Carlos Mendoza · 5 exámenes                   │
-│    ✅ 4 bien  ·  ⚠️ 1 necesita atención         ▼   │
-├──────────────────────────────────────────────────────┤
-│                                                      │
-│  ⚠️ Colesterol LDL                                   │
-│     Tu resultado: 165 mg/dL                          │
-│     Lo ideal: menor a 130 mg/dL                      │
-│     ██████████████████████████████░░░░ ALTO           │
-│                                                      │
-│  ✅ Glucosa en ayunas                                 │
-│     Tu resultado: 92 mg/dL                           │
-│     Lo ideal: entre 70 y 100 mg/dL                   │
-│     ████████████████████░░░░░░░░░░ BIEN              │
-│                                                      │
-│  ✅ Hemograma completo — Normal                       │
-│                                                      │
-│  📄 Descargar PDF                                     │
-└──────────────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────────────┐
-│ 🧪 05 Mar 2026 · Laboratorio Suiza Lab               │
-│    Dr. Carlos Mendoza · 4 exámenes                   │
-│    ✅ 3 bien  ·  ⚠️ 1 necesita atención         ▶   │
-└──────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│  🧪 Laboratorio Roe                          4✓  1⚠  │
+│     10 Feb 2026 · Dr. Carlos Mendoza              ▼   │
+├────────────────────────────────────────────────────────┤
+│ ┃  Colesterol LDL                                      │
+│ ┃  165 mg/dL  ·  ideal < 130        ⊘ Elevado         │
+│                                                        │
+│    Hemograma completo                                  │
+│    Normal                            ✓ En rango        │
+│                                                        │
+│    Colesterol HDL                                      │
+│    52 mg/dL  ·  ideal > 40           ✓ En rango        │
+│    ...                                                 │
+│                                                        │
+│    📄 Descargar PDF                                    │
+└────────────────────────────────────────────────────────┘
 ```
 
-### Cambios clave
+## Changes to `src/components/LabCard.tsx`
 
-**1. `src/data/encounters.ts`** — Agregar segunda visita al laboratorio:
-- Fecha: "05 Mar 2026", Lab: "Laboratorio Suiza Lab", ordenado por Dr. Carlos Mendoza
-- Resultados: Colesterol LDL (mejorado a 138, aún anormal), HDL 55 (normal), Triglicéridos 130 (normal), Hemoglobina glicosilada 5.4% (normal)
-- Esto simula un chequeo de seguimiento al mes siguiente
+1. **Result values**: `text-base font-bold` (not `text-xl`) — proportional to row
+2. **Reference text**: Change "ref < 130 mg/dL" → "ideal < 130" — shorter, clearer
+3. **Abnormal rows**: Add a `border-l-3 border-amber-500` left accent strip + slightly warmer background `bg-amber-50/60 dark:bg-amber-950/20` instead of barely-visible pink
+4. **Status badges**: Use amber/orange for abnormal (not destructive red — it's a warning, not an error). Green for normal. Slightly larger padding
+5. **Consistent row padding**: `py-3 px-4` for all rows, same height
+6. **Header**: Replace bland gray icon box with a subtle colored circle. Show counts as colored dots/pills
+7. **Dividers**: Use `border-border/60` — visible but not heavy
+8. **PDF button**: Less margin above, aligned with content
+9. **Non-numeric results**: Same row structure, value on second line as `text-sm text-muted-foreground`
 
-**2. `src/components/LabCard.tsx`** — Rediseño completo del componente:
-- **Header**: Más grande y claro. Muestra fecha, laboratorio, doctor, conteo con texto "X bien · Y necesita atención"
-- **Resultados individuales**: Eliminar la barra de rango técnica. Reemplazar con:
-  - Texto en lenguaje natural: "Tu resultado: 165 mg/dL" y "Lo ideal: menor a 130 mg/dL"
-  - Transformar "< 130" → "menor a 130", "> 40" → "mayor a 40", "70 – 100" → "entre 70 y 100"
-  - Una barra de progreso simple (verde si normal, rojo/naranja si anormal) sin números en los extremos
-  - Etiqueta grande: "BIEN" (verde) o "ALTO" / "BAJO" (rojo) según si el resultado excede o no el rango
-- **Resultados no numéricos** (como "Hemograma completo: Normal"): mostrar en una sola línea simple con check verde
-- Resultados anormales siguen apareciendo primero
-- Texto más grande (text-lg para nombres, text-base para valores)
-- Más padding y espaciado para facilitar lectura
-
-### Archivos a modificar
-1. `src/data/encounters.ts` — agregar nuevo LabEncounter
-2. `src/components/LabCard.tsx` — rediseño del componente
+No file changes needed to `encounters.ts` — data is fine.
 
