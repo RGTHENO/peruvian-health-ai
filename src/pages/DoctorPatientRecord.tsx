@@ -194,9 +194,18 @@ const DoctorPatientRecord = () => {
           {consultations.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">Sin consultas registradas</p>
           ) : (
-            <div className="space-y-4">
+            <div className="relative space-y-0">
+              <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-border" />
               {consultations.map((e, i) => (
-                <ConsultationCard key={i} encounter={e} defaultOpen={i === 0} />
+                <div key={i} className="relative pl-10 pb-8 last:pb-0">
+                  <div className="absolute left-[9px] top-1.5 h-3 w-3 rounded-full border-2 border-primary bg-background z-10" />
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+                    <Calendar className="h-3 w-3" />
+                    {e.date} · <span className="font-medium text-foreground">{e.doctor}</span>
+                    <Badge variant="outline" className="text-xs ml-1">{e.specialty}</Badge>
+                  </p>
+                  <ConsultationCard encounter={e} defaultOpen={i === 0} />
+                </div>
               ))}
             </div>
           )}
@@ -208,7 +217,14 @@ const DoctorPatientRecord = () => {
           ) : (
             <div className="space-y-4">
               {surgeries.map((e, i) => (
-                <SurgeryCard key={i} encounter={e} defaultOpen={i === 0} />
+                <div key={i}>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+                    <Calendar className="h-3 w-3" />
+                    {e.date} · <span className="font-medium text-foreground">{e.surgeon}</span>
+                    <Badge variant="outline" className="text-xs ml-1">{e.procedureType}</Badge>
+                  </p>
+                  <SurgeryCard encounter={e} defaultOpen={i === 0} />
+                </div>
               ))}
             </div>
           )}
@@ -221,7 +237,14 @@ const DoctorPatientRecord = () => {
             <div className="space-y-4">
               {prescriptionEncounters.map((e, i) =>
                 e.type === "consultation" ? (
-                  <PrescriptionCard key={i} encounter={e} defaultOpen={i === 0} />
+                  <div key={i}>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+                      <Calendar className="h-3 w-3" />
+                      {e.date} · <span className="font-medium text-foreground">{e.doctor}</span>
+                      <Badge variant="outline" className="text-xs ml-1">{e.specialty}</Badge>
+                    </p>
+                    <PrescriptionCard encounter={e} defaultOpen={i === 0} />
+                  </div>
                 ) : null
               )}
             </div>
@@ -234,7 +257,13 @@ const DoctorPatientRecord = () => {
           ) : (
             <div className="space-y-4">
               {labs.map((e, i) => (
-                <LabCard key={i} encounter={e} defaultOpen={i === 0} />
+                <div key={i}>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+                    <Calendar className="h-3 w-3" />
+                    {e.date} · <span className="font-medium text-foreground">{e.lab}</span>
+                  </p>
+                  <LabCard encounter={e} defaultOpen={i === 0} />
+                </div>
               ))}
             </div>
           )}
