@@ -120,19 +120,26 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA — Doble conversión */}
       <section className="bg-primary py-16">
         <div className="container text-center">
           <h2 className="text-3xl font-bold font-serif text-primary-foreground">
-            ¿Listo para una mejor atención médica?
+            Encuentra tu médico ideal
           </h2>
           <p className="mt-3 text-primary-foreground/80 max-w-lg mx-auto">
-            Únete a miles de peruanos que ya confían en SaludPe para cuidar su salud.
+            Más de 500 especialistas verificados listos para atenderte.
           </p>
-          <div className="flex justify-center gap-3 mt-8">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
             <Link to="/directorio">
               <Button size="lg" variant="secondary">
-                Explorar Directorio
+                <Search className="h-4 w-4" />
+                Buscar Especialista
+              </Button>
+            </Link>
+            <Link to="/doctor/portal">
+              <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Stethoscope className="h-4 w-4" />
+                Soy Médico
               </Button>
             </Link>
           </div>
