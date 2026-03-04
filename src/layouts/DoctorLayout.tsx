@@ -32,7 +32,12 @@ const DoctorLayout = () => {
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" sideOffset={8} className="w-56">
+              <div className="px-3 py-2">
+                <p className="text-sm font-semibold text-foreground">Dra. María Elena</p>
+                <p className="text-xs text-muted-foreground">Cardiología</p>
+              </div>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/doctor/portal/configuracion" className="flex items-center gap-2 cursor-pointer">
                   <Settings className="h-4 w-4" />
