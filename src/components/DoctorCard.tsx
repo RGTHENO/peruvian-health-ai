@@ -64,7 +64,7 @@ const DoctorCard = ({ doctor }: { doctor: Doctor }) => {
                 S/ {doctor.price}
               </span>
               <Link to={`/doctor/${doctor.id}`}>
-                <Button size="sm">Ver Perfil</Button>
+                <Button size="sm">Ver Perfil y Agendar</Button>
               </Link>
             </div>
           </div>

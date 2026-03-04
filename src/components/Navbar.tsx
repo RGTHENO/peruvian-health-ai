@@ -1,16 +1,12 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Heart, CalendarCheck, MapPin, Video, ChevronDown } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
+import { Menu, X, Heart, CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [popoverOpen, setPopoverOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
 
   const isDirectorio = location.pathname === "/directorio";
 
@@ -35,31 +31,12 @@ const Navbar = () => {
             Directorio Médico
           </Link>
 
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button size="sm" className="gap-1.5">
-                <CalendarCheck className="h-4 w-4" />
-                Agendar Cita
-                <ChevronDown className="h-3 w-3 opacity-70" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-52 p-2" align="center" sideOffset={8}>
-              <button
-                onClick={() => { setPopoverOpen(false); navigate("/directorio?tipo=presencial"); }}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors"
-              >
-                <MapPin className="h-4 w-4 text-primary" />
-                Cita Presencial
-              </button>
-              <button
-                onClick={() => { setPopoverOpen(false); navigate("/directorio?tipo=telemedicina"); }}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors"
-              >
-                <Video className="h-4 w-4 text-primary" />
-                Cita Virtual
-              </button>
-            </PopoverContent>
-          </Popover>
+          <Link to="/directorio">
+            <Button size="sm" className="gap-1.5">
+              <CalendarCheck className="h-4 w-4" />
+              Agendar Cita
+            </Button>
+          </Link>
 
           <Link to="/iniciar-sesion">
             <Button size="sm" variant="outline">Iniciar Sesión</Button>
@@ -86,26 +63,15 @@ const Navbar = () => {
             Directorio Médico
           </Link>
 
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-1">Agendar Cita</p>
-          <Link
-            to="/directorio?tipo=presencial"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-          >
-            <MapPin className="h-4 w-4 text-primary" />
-            Cita Presencial
-          </Link>
-          <Link
-            to="/directorio?tipo=telemedicina"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-          >
-            <Video className="h-4 w-4 text-primary" />
-            Cita Virtual
+          <Link to="/directorio" onClick={() => setIsOpen(false)}>
+            <Button size="sm" className="w-full gap-1.5">
+              <CalendarCheck className="h-4 w-4" />
+              Agendar Cita
+            </Button>
           </Link>
 
           <Link to="/iniciar-sesion" onClick={() => setIsOpen(false)}>
-            <Button size="sm" className="w-full mt-2">Iniciar Sesión</Button>
+            <Button size="sm" variant="outline" className="w-full">Iniciar Sesión</Button>
           </Link>
         </div>
       )}
