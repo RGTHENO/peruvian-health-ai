@@ -17,22 +17,21 @@ const Footer = () => (
         <h4 className="font-semibold text-foreground mb-3 text-sm">Pacientes</h4>
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li><Link to="/directorio" className="hover:text-primary transition-colors">Buscar Médicos</Link></li>
-          <li><Link to="/" className="hover:text-primary transition-colors">Teleconsulta</Link></li>
-          <li><Link to="/" className="hover:text-primary transition-colors">Mi Historial Médico</Link></li>
+          <li><Link to="/teleconsulta" className="hover:text-primary transition-colors">Teleconsulta</Link></li>
+          <li><Link to="/historial" className="hover:text-primary transition-colors">Mi Historial Médico</Link></li>
         </ul>
       </div>
       <div>
         <h4 className="font-semibold text-foreground mb-3 text-sm">Médicos</h4>
         <ul className="space-y-2 text-sm text-muted-foreground">
-          <li><Link to="/" className="hover:text-primary transition-colors">Portal Médico</Link></li>
-          <li><Link to="/" className="hover:text-primary transition-colors">IA Clínica</Link></li>
+          <li><Link to="/doctor/portal" className="hover:text-primary transition-colors">Portal Médico</Link></li>
         </ul>
       </div>
       <div>
         <h4 className="font-semibold text-foreground mb-3 text-sm">Legal</h4>
         <ul className="space-y-2 text-sm text-muted-foreground">
-          <li><Link to="/" className="hover:text-primary transition-colors">Privacidad (Ley 29733)</Link></li>
-          <li><Link to="/" className="hover:text-primary transition-colors">Términos de Uso</Link></li>
+          <li><Link to="/privacidad" className="hover:text-primary transition-colors">Privacidad (Ley 29733)</Link></li>
+          <li><Link to="/terminos" className="hover:text-primary transition-colors">Términos de Uso</Link></li>
         </ul>
       </div>
     </div>

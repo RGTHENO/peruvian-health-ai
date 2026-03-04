@@ -42,10 +42,18 @@ const DoctorSidebar = () => {
       </nav>
 
       <div className="p-4 border-t border-border space-y-1">
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground w-full transition-colors">
+        <Link
+          to="/doctor/portal/configuracion"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+            location.pathname === "/doctor/portal/configuracion"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+        >
           <Settings className="h-4 w-4" />
           Configuración
-        </button>
+        </Link>
         <Link to="/">
           <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground">
             <LogOut className="h-4 w-4" />

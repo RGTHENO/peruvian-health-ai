@@ -18,13 +18,15 @@ const Navbar = () => {
           <Link to="/directorio" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             Directorio Médico
           </Link>
-          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+          <Link to="/teleconsulta" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             Teleconsulta
           </Link>
-          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+          <Link to="/historial" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             Mi Historial
           </Link>
-          <Button size="sm">Iniciar Sesión</Button>
+          <Link to="/iniciar-sesion">
+            <Button size="sm">Iniciar Sesión</Button>
+          </Link>
         </div>
 
         <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
@@ -35,9 +37,9 @@ const Navbar = () => {
       {isOpen && (
         <div className="md:hidden border-t border-border bg-card p-4 space-y-3">
           <Link to="/directorio" className="block text-sm font-medium text-muted-foreground hover:text-primary">Directorio Médico</Link>
-          <Link to="/" className="block text-sm font-medium text-muted-foreground hover:text-primary">Teleconsulta</Link>
-          <Link to="/" className="block text-sm font-medium text-muted-foreground hover:text-primary">Mi Historial</Link>
-          <Button size="sm" className="w-full">Iniciar Sesión</Button>
+          <Link to="/teleconsulta" className="block text-sm font-medium text-muted-foreground hover:text-primary">Teleconsulta</Link>
+          <Link to="/historial" className="block text-sm font-medium text-muted-foreground hover:text-primary">Mi Historial</Link>
+          <Link to="/iniciar-sesion"><Button size="sm" className="w-full">Iniciar Sesión</Button></Link>
         </div>
       )}
     </nav>

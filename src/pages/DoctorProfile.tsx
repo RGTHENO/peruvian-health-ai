@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Star, MapPin, Video, Building2, Clock, Shield, ArrowLeft, Calendar, Globe } from "lucide-react";
 import { doctors } from "@/data/doctors";
+import { toast } from "sonner";
 
 const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "14:00", "14:30", "15:00", "15:30", "16:00"];
 
@@ -15,6 +17,7 @@ const DoctorProfile = () => {
   const { id } = useParams();
   const doctor = doctors.find((d) => d.id === id);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   if (!doctor) {
     return (
@@ -29,6 +32,14 @@ const DoctorProfile = () => {
   }
 
   const initials = doctor.name.split(" ").filter((_, i) => i === 0 || i === 2).map((n) => n[0]).join("");
+
+  const handleConfirmBooking = () => {
+    setShowConfirmDialog(false);
+    toast.success(`¡Cita reservada con ${doctor.name} a las ${selectedSlot}!`, {
+      description: "Recibirás un correo de confirmación con los detalles.",
+    });
+    setSelectedSlot(null);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -124,7 +135,7 @@ const DoctorProfile = () => {
                   </div>
                 </div>
 
-                <Button className="w-full" size="lg" disabled={!selectedSlot}>
+                <Button className="w-full" size="lg" disabled={!selectedSlot} onClick={() => setShowConfirmDialog(true)}>
                   {selectedSlot ? `Reservar a las ${selectedSlot}` : "Selecciona un horario"}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
@@ -135,6 +146,42 @@ const DoctorProfile = () => {
           </div>
         </div>
       </main>
+
+      {/* Booking Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-serif">Confirmar Reserva</DialogTitle>
+            <DialogDescription>Revisa los detalles de tu cita antes de confirmar.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Médico</span>
+              <span className="font-medium text-foreground">{doctor.name}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Especialidad</span>
+              <span className="font-medium text-foreground">{doctor.specialty}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Horario</span>
+              <span className="font-medium text-foreground">Hoy a las {selectedSlot}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Precio</span>
+              <span className="font-bold text-foreground">S/ {doctor.price}</span>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="text-xs text-muted-foreground">Métodos de pago: Culqi · Yape · Plin</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>Cancelar</Button>
+            <Button onClick={handleConfirmBooking}>Confirmar Reserva</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );
