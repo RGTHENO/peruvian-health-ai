@@ -4,8 +4,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Stethoscope, Pill, FlaskConical, Calendar, ClipboardList, Search } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
@@ -40,15 +38,6 @@ const Historial = () => {
       );
     });
   }, [search]);
-
-
-  const allLabs = useMemo(
-    () =>
-      mockEncounters
-        .filter((e): e is Extract<Encounter, { type: "lab" }> => e.type === "lab")
-        .flatMap((e) => e.labResults.map((l) => ({ ...l, date: e.date, lab: e.lab }))),
-    [],
-  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -147,40 +136,13 @@ const Historial = () => {
 
             {/* Lab Tab */}
             <TabsContent value="laboratorio">
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Fecha</TableHead>
-                        <TableHead>Estudio</TableHead>
-                        <TableHead>Resultado</TableHead>
-                        <TableHead className="hidden md:table-cell">Rango ref.</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead className="hidden md:table-cell">Laboratorio</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {allLabs.map((lab, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="text-muted-foreground whitespace-nowrap">{lab.date}</TableCell>
-                          <TableCell className="font-medium">{lab.test}</TableCell>
-                          <TableCell>
-                            {lab.unit !== "—" ? `${lab.result} ${lab.unit}` : lab.result}
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell text-muted-foreground">{lab.referenceRange}</TableCell>
-                          <TableCell>
-                            <Badge variant={lab.status === "Normal" ? "secondary" : "destructive"} className="text-xs">
-                              {lab.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">{lab.lab}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              <div className="space-y-4">
+                {mockEncounters
+                  .filter((e): e is import("@/data/encounters").LabEncounter => e.type === "lab")
+                  .map((encounter, i) => (
+                    <LabCard key={i} encounter={encounter} defaultOpen={i === 0} />
+                  ))}
+              </div>
             </TabsContent>
           </Tabs>
         </div>
