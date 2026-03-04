@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DoctorCard from "@/components/DoctorCard";
@@ -8,10 +9,13 @@ import { Search } from "lucide-react";
 import { doctors, specialties, insurances } from "@/data/doctors";
 
 const Directory = () => {
+  const [searchParams] = useSearchParams();
+  const initialModality = searchParams.get("modalidad") || "all";
+
   const [search, setSearch] = useState("");
   const [specialty, setSpecialty] = useState("all");
   const [insurance, setInsurance] = useState("all");
-  const [modality, setModality] = useState("all");
+  const [modality, setModality] = useState(initialModality);
 
   const filtered = useMemo(() => {
     return doctors.filter((d) => {

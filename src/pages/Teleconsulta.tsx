@@ -26,7 +26,7 @@ const Teleconsulta = () => {
               Consulta con los mejores especialistas del Perú desde la comodidad de tu hogar. 
               Atención médica de calidad, sin filas ni desplazamientos.
             </p>
-            <Link to="/directorio" className="inline-block mt-8">
+            <Link to="/directorio?modalidad=telemedicina" className="inline-block mt-8">
               <Button size="lg" variant="secondary">
                 Ver médicos con telemedicina
               </Button>
