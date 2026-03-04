@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Star, MapPin, Video, Building2, Clock, Shield, ArrowLeft, Calendar, Globe } from "lucide-react";
 import { doctors } from "@/data/doctors";
 import { toast } from "sonner";
@@ -17,7 +19,15 @@ const DoctorProfile = () => {
   const { id } = useParams();
   const doctor = doctors.find((d) => d.id === id);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [selectedModality, setSelectedModality] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Auto-select modality if doctor only supports one
+  useEffect(() => {
+    if (doctor && doctor.modality.length === 1) {
+      setSelectedModality(doctor.modality[0]);
+    }
+  }, [doctor]);
 
   if (!doctor) {
     return (
@@ -35,11 +45,17 @@ const DoctorProfile = () => {
 
   const handleConfirmBooking = () => {
     setShowConfirmDialog(false);
+    const modalityMessage = selectedModality === "presencial"
+      ? `Te esperamos en ${doctor.location}. Llega 10 min antes.`
+      : "Recibirás el enlace de WhatsApp videollamada 15 min antes de tu cita.";
     toast.success(`¡Cita reservada con ${doctor.name} a las ${selectedSlot}!`, {
-      description: "Recibirás un correo de confirmación con los detalles.",
+      description: modalityMessage,
     });
     setSelectedSlot(null);
+    if (doctor.modality.length > 1) setSelectedModality(null);
   };
+
+  const canBook = selectedSlot && selectedModality;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -135,8 +151,73 @@ const DoctorProfile = () => {
                   </div>
                 </div>
 
-                <Button className="w-full" size="lg" disabled={!selectedSlot} onClick={() => setShowConfirmDialog(true)}>
-                  {selectedSlot ? `Reservar a las ${selectedSlot}` : "Selecciona un horario"}
+                {/* Modality selection — shown after selecting a time slot */}
+                {selectedSlot && (
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <p className="text-sm font-medium text-foreground">Modalidad de consulta</p>
+                    {doctor.modality.length === 1 ? (
+                      <div className="flex items-center gap-2 rounded-md border border-border p-3 bg-accent/50">
+                        {doctor.modality[0] === "presencial" ? (
+                          <>
+                            <Building2 className="h-4 w-4 text-primary shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Presencial</p>
+                              <p className="text-xs text-muted-foreground">En consultorio · {doctor.location}</p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <Video className="h-4 w-4 text-primary shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Virtual</p>
+                              <p className="text-xs text-muted-foreground">Videollamada por WhatsApp</p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <RadioGroup
+                        value={selectedModality || ""}
+                        onValueChange={setSelectedModality}
+                        className="gap-2"
+                      >
+                        {doctor.modality.includes("presencial") && (
+                          <Label
+                            htmlFor="mod-presencial"
+                            className={`flex items-center gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
+                              selectedModality === "presencial" ? "border-primary bg-accent" : "border-border hover:bg-accent/50"
+                            }`}
+                          >
+                            <RadioGroupItem value="presencial" id="mod-presencial" />
+                            <Building2 className="h-4 w-4 text-primary shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Presencial</p>
+                              <p className="text-xs text-muted-foreground">En consultorio · {doctor.location}</p>
+                            </div>
+                          </Label>
+                        )}
+                        {doctor.modality.includes("telemedicina") && (
+                          <Label
+                            htmlFor="mod-virtual"
+                            className={`flex items-center gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
+                              selectedModality === "telemedicina" ? "border-primary bg-accent" : "border-border hover:bg-accent/50"
+                            }`}
+                          >
+                            <RadioGroupItem value="telemedicina" id="mod-virtual" />
+                            <Video className="h-4 w-4 text-primary shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Virtual</p>
+                              <p className="text-xs text-muted-foreground">Videollamada por WhatsApp</p>
+                            </div>
+                          </Label>
+                        )}
+                      </RadioGroup>
+                    )}
+                  </div>
+                )}
+
+                <Button className="w-full" size="lg" disabled={!canBook} onClick={() => setShowConfirmDialog(true)}>
+                  {canBook ? `Reservar a las ${selectedSlot}` : selectedSlot ? "Selecciona la modalidad" : "Selecciona un horario"}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
                   Pago seguro con Culqi, Yape o Plin
@@ -167,6 +248,33 @@ const DoctorProfile = () => {
               <span className="text-muted-foreground">Horario</span>
               <span className="font-medium text-foreground">Hoy a las {selectedSlot}</span>
             </div>
+            <div className="flex justify-between items-start text-sm">
+              <span className="text-muted-foreground">Modalidad</span>
+              <span className="font-medium text-foreground text-right flex items-center gap-1.5">
+                {selectedModality === "presencial" ? (
+                  <>
+                    <Building2 className="h-3.5 w-3.5 text-primary" />
+                    Presencial
+                  </>
+                ) : (
+                  <>
+                    <Video className="h-3.5 w-3.5 text-primary" />
+                    Virtual
+                  </>
+                )}
+              </span>
+            </div>
+            {selectedModality === "presencial" ? (
+              <div className="rounded-md bg-accent/50 p-3 text-xs text-muted-foreground flex items-start gap-2">
+                <MapPin className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                <span>Consultorio en {doctor.location}. Llega 10 minutos antes de tu cita.</span>
+              </div>
+            ) : (
+              <div className="rounded-md bg-accent/50 p-3 text-xs text-muted-foreground flex items-start gap-2">
+                <Video className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                <span>Recibirás un enlace de WhatsApp videollamada al número registrado, 15 minutos antes de tu cita.</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Precio</span>
               <span className="font-bold text-foreground">S/ {doctor.price}</span>
