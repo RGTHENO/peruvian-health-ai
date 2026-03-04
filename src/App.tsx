@@ -8,6 +8,7 @@ import Directory from "./pages/Directory";
 import DoctorProfile from "./pages/DoctorProfile";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorAgenda from "./pages/DoctorAgenda";
+import DoctorConsultation from "./pages/DoctorConsultation";
 import DoctorPatients from "./pages/DoctorPatients";
 import DoctorPatientRecord from "./pages/DoctorPatientRecord";
 import DoctorSettings from "./pages/DoctorSettings";
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/doctor/portal" element={<DoctorLayout />}>
             <Route index element={<DoctorDashboard />} />
             <Route path="agenda" element={<DoctorAgenda />} />
+            <Route path="consulta/:appointmentId" element={<DoctorConsultation />} />
             <Route path="pacientes" element={<DoctorPatients />} />
             <Route path="pacientes/:patientId" element={<DoctorPatientRecord />} />
             <Route path="configuracion" element={<DoctorSettings />} />

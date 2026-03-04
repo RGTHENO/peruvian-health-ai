@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Users, Clock, CheckCircle, XCircle, Video, MapPin, ArrowRight } from "lucide-react";
+import { CalendarDays, Users, Clock, CheckCircle, XCircle, Video, MapPin, ArrowRight, Stethoscope } from "lucide-react";
 import { appointments, patients } from "@/data/appointments";
 
 const statusColors: Record<string, string> = {
@@ -113,6 +113,11 @@ const DoctorDashboard = () => {
                   <Badge variant="outline" className={`text-xs ${statusColors[apt.status]}`}>
                     {statusLabels[apt.status]}
                   </Badge>
+                  <Link to={`/doctor/portal/consulta/${apt.id}`}>
+                    <Button size="sm" className="gap-1">
+                      <Stethoscope className="h-3 w-3" /> Atender
+                    </Button>
+                  </Link>
                 </div>
               </div>
             ))
