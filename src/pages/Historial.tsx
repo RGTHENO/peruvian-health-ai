@@ -1,26 +1,75 @@
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Pill, FlaskConical, Calendar, Lock, ClipboardList } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { FileText, Pill, FlaskConical, Calendar, ClipboardList, Stethoscope } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
-const mockDiagnoses = [
-  { date: "15 Feb 2026", doctor: "Dr. Carlos Mendoza", diagnosis: "Hipertensión arterial leve", status: "Activo" },
-  { date: "03 Ene 2026", doctor: "Dra. Ana Gutiérrez", diagnosis: "Rinitis alérgica estacional", status: "Resuelto" },
+interface Prescription {
+  medication: string;
+  dosage: string;
+  duration: string;
+}
+
+interface LabResult {
+  test: string;
+  result: string;
+  lab: string;
+  status: "Normal" | "Anormal";
+}
+
+interface Encounter {
+  date: string;
+  doctor: string;
+  type: "consultation" | "lab";
+  diagnosis?: string;
+  diagnosisStatus?: "Activo" | "Resuelto";
+  prescriptions?: Prescription[];
+  labs?: LabResult[];
+}
+
+const mockEncounters: Encounter[] = [
+  {
+    date: "15 Feb 2026",
+    doctor: "Dr. Carlos Mendoza",
+    type: "consultation",
+    diagnosis: "Hipertensión arterial leve",
+    diagnosisStatus: "Activo",
+    prescriptions: [
+      { medication: "Losartán 50mg", dosage: "1 vez al día", duration: "3 meses" },
+    ],
+  },
+  {
+    date: "10 Feb 2026",
+    doctor: "Lab. Roe",
+    type: "lab",
+    labs: [
+      { test: "Hemograma completo", result: "Normal", lab: "Lab. Roe", status: "Normal" },
+      { test: "Perfil lipídico", result: "Colesterol LDL elevado", lab: "Lab. Roe", status: "Anormal" },
+    ],
+  },
+  {
+    date: "03 Ene 2026",
+    doctor: "Dra. Ana Gutiérrez",
+    type: "consultation",
+    diagnosis: "Rinitis alérgica estacional",
+    diagnosisStatus: "Resuelto",
+    prescriptions: [
+      { medication: "Loratadina 10mg", dosage: "1 vez al día", duration: "14 días" },
+    ],
+  },
 ];
 
-const mockPrescriptions = [
-  { date: "15 Feb 2026", medication: "Losartán 50mg", dosage: "1 vez al día", duration: "3 meses" },
-  { date: "03 Ene 2026", medication: "Loratadina 10mg", dosage: "1 vez al día", duration: "14 días" },
-];
+const allPrescriptions = mockEncounters
+  .filter((e) => e.prescriptions)
+  .flatMap((e) => e.prescriptions!.map((p) => ({ ...p, doctor: e.doctor, date: e.date })));
 
-const mockLabResults = [
-  { date: "10 Feb 2026", test: "Hemograma completo", result: "Normal", lab: "Lab. Roe" },
-  { date: "10 Feb 2026", test: "Perfil lipídico", result: "Colesterol LDL elevado", lab: "Lab. Roe" },
-];
+const allLabs = mockEncounters
+  .filter((e) => e.labs)
+  .flatMap((e) => e.labs!.map((l) => ({ ...l, date: e.date })));
 
 const Historial = () => {
   const revealRef = useScrollReveal();
@@ -50,71 +99,155 @@ const Historial = () => {
           </div>
         </div>
 
-        <div ref={revealRef} className="grid gap-6 lg:grid-cols-3 reveal-on-scroll">
-          {/* Diagnoses */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5 text-primary" /> Diagnósticos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockDiagnoses.map((d, i) => (
-                <div key={i} className="border-b border-border pb-3 last:border-0 last:pb-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-3 w-3" /> {d.date}
-                    </span>
-                    <Badge variant={d.status === "Activo" ? "default" : "secondary"} className="text-xs">
-                      {d.status}
-                    </Badge>
+        <div ref={revealRef} className="reveal-on-scroll">
+          <Tabs defaultValue="consultas">
+            <TabsList className="mb-6">
+              <TabsTrigger value="consultas" className="gap-1.5">
+                <Stethoscope className="h-4 w-4" /> Consultas
+              </TabsTrigger>
+              <TabsTrigger value="recetas" className="gap-1.5">
+                <Pill className="h-4 w-4" /> Recetas
+              </TabsTrigger>
+              <TabsTrigger value="laboratorio" className="gap-1.5">
+                <FlaskConical className="h-4 w-4" /> Laboratorio
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Timeline Tab */}
+            <TabsContent value="consultas">
+              <div className="relative space-y-0">
+                {/* Vertical line */}
+                <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-border" />
+
+                {mockEncounters.map((encounter, i) => (
+                  <div key={i} className="relative pl-10 pb-8 last:pb-0">
+                    {/* Dot */}
+                    <div className="absolute left-[9px] top-1.5 h-3 w-3 rounded-full border-2 border-primary bg-background z-10" />
+
+                    {/* Date & Doctor header */}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
+                      <Calendar className="h-3 w-3" />
+                      {encounter.date} · <span className="font-medium text-foreground">{encounter.doctor}</span>
+                    </p>
+
+                    <Card>
+                      <CardContent className="p-4 space-y-3">
+                        {/* Diagnosis */}
+                        {encounter.diagnosis && (
+                          <div className="flex items-start gap-2">
+                            <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-medium text-foreground">{encounter.diagnosis}</span>
+                                <Badge
+                                  variant={encounter.diagnosisStatus === "Activo" ? "default" : "secondary"}
+                                  className="text-xs"
+                                >
+                                  {encounter.diagnosisStatus}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Prescriptions */}
+                        {encounter.prescriptions?.map((rx, j) => (
+                          <div key={j} className="flex items-start gap-2">
+                            <Pill className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{rx.medication}</p>
+                              <p className="text-xs text-muted-foreground">{rx.dosage} · {rx.duration}</p>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Labs */}
+                        {encounter.labs?.map((lab, j) => (
+                          <div key={j} className="flex items-start gap-2">
+                            <FlaskConical className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-medium text-foreground">{lab.test}</span>
+                                <Badge
+                                  variant={lab.status === "Normal" ? "secondary" : "destructive"}
+                                  className="text-xs"
+                                >
+                                  {lab.result}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{lab.lab}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
                   </div>
-                  <p className="text-sm font-medium text-foreground">{d.diagnosis}</p>
-                  <p className="text-xs text-muted-foreground">{d.doctor}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </div>
+            </TabsContent>
 
-          {/* Prescriptions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Pill className="h-5 w-5 text-primary" /> Recetas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockPrescriptions.map((p, i) => (
-                <div key={i} className="border-b border-border pb-3 last:border-0 last:pb-0">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                    <Calendar className="h-3 w-3" /> {p.date}
-                  </span>
-                  <p className="text-sm font-medium text-foreground">{p.medication}</p>
-                  <p className="text-xs text-muted-foreground">{p.dosage} · {p.duration}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+            {/* Recetas Tab */}
+            <TabsContent value="recetas">
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Medicamento</TableHead>
+                        <TableHead>Dosis</TableHead>
+                        <TableHead>Duración</TableHead>
+                        <TableHead>Doctor</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allPrescriptions.map((rx, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="text-muted-foreground">{rx.date}</TableCell>
+                          <TableCell className="font-medium">{rx.medication}</TableCell>
+                          <TableCell>{rx.dosage}</TableCell>
+                          <TableCell>{rx.duration}</TableCell>
+                          <TableCell>{rx.doctor}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          {/* Lab Results */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FlaskConical className="h-5 w-5 text-primary" /> Resultados de Laboratorio
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockLabResults.map((l, i) => (
-                <div key={i} className="border-b border-border pb-3 last:border-0 last:pb-0">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                    <Calendar className="h-3 w-3" /> {l.date}
-                  </span>
-                  <p className="text-sm font-medium text-foreground">{l.test}</p>
-                  <p className="text-xs text-muted-foreground">{l.result} · {l.lab}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+            {/* Lab Tab */}
+            <TabsContent value="laboratorio">
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Estudio</TableHead>
+                        <TableHead>Resultado</TableHead>
+                        <TableHead>Laboratorio</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allLabs.map((lab, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="text-muted-foreground">{lab.date}</TableCell>
+                          <TableCell className="font-medium">{lab.test}</TableCell>
+                          <TableCell>
+                            <Badge variant={lab.status === "Normal" ? "secondary" : "destructive"} className="text-xs">
+                              {lab.result}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{lab.lab}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       <Footer />
