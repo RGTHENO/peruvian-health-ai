@@ -1,11 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, CalendarDays, Users } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/doctor/portal" },
   { label: "Agenda", icon: CalendarDays, path: "/doctor/portal/agenda" },
   { label: "Pacientes", icon: Users, path: "/doctor/portal/pacientes" },
+  { label: "Config", icon: Settings, path: "/doctor/portal/configuracion" },
 ];
 
 const DoctorMobileNav = () => {
