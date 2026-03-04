@@ -64,7 +64,7 @@ const Index = () => {
                   Buscar Médico
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+              <Button size="lg" variant="secondary">
                 Soy Médico
               </Button>
             </div>
