@@ -32,7 +32,7 @@ const DoctorLayout = () => {
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={8} className="w-56">
+            <DropdownMenuContent align="end" sideOffset={8} className="w-48">
               <div className="px-3 py-2">
                 <p className="text-sm font-semibold text-foreground">Dra. María Elena</p>
                 <p className="text-xs text-muted-foreground">Cardiología</p>
