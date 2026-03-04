@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Heart, Sun, Moon, CalendarCheck, MapPin, Video, ChevronDown } from "lucide-react";
+import { Menu, X, Heart, CalendarCheck, MapPin, Video, ChevronDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useTheme } from "@/hooks/use-theme";
+
 import { cn } from "@/lib/utils";
 
 const Navbar = () => {
@@ -11,7 +11,6 @@ const Navbar = () => {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
 
   const isDirectorio = location.pathname === "/directorio";
 
@@ -62,26 +61,12 @@ const Navbar = () => {
             </PopoverContent>
           </Popover>
 
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            aria-label="Cambiar tema"
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
           <Link to="/iniciar-sesion">
             <Button size="sm" variant="outline">Iniciar Sesión</Button>
           </Link>
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            aria-label="Cambiar tema"
-          >
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
           <button onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
