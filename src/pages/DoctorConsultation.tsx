@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft,
   Shield,
@@ -16,17 +17,24 @@ import {
   AlertTriangle,
   Plus,
   Trash2,
-  ChevronDown,
   Stethoscope,
   FlaskConical,
   Scissors,
   Save,
   FileText,
+  Clock,
+  Pill,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
 import VoiceDictation from "@/components/VoiceDictation";
 import { appointments, patients } from "@/data/appointments";
 import { mockEncounters, addEncounter, type Prescription, type ConsultationEncounter, type LabEncounter } from "@/data/encounters";
+import ConsultationCard from "@/components/ConsultationCard";
+import LabCard from "@/components/LabCard";
+import SurgeryCard from "@/components/SurgeryCard";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface LabOrder {
   test: string;
@@ -49,6 +57,7 @@ const DoctorConsultation = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const appointment = useMemo(() => appointments.find((a) => a.id === appointmentId), [appointmentId]);
   const patient = useMemo(() => patients.find((p) => p.id === appointment?.patientId), [appointment]);
@@ -64,12 +73,17 @@ const DoctorConsultation = () => {
   const [labOrders, setLabOrders] = useState<LabOrder[]>([]);
   const [surgeryReferral, setSurgeryReferral] = useState<SurgeryReferral | null>(null);
   const [notes, setNotes] = useState("");
+  const [showHistory, setShowHistory] = useState(!isMobile);
 
   // Previous encounters
   const previousEncounters = useMemo(
-    () => mockEncounters.filter((e) => e.patientId === patient?.id).slice(0, 3),
+    () => mockEncounters.filter((e) => e.patientId === patient?.id),
     [patient]
   );
+
+  const prevConsultations = previousEncounters.filter((e) => e.type === "consultation");
+  const prevLabs = previousEncounters.filter((e) => e.type === "lab");
+  const prevSurgeries = previousEncounters.filter((e) => e.type === "surgery");
 
   // Prescription handlers
   const addPrescription = () => setPrescriptions((p) => [...p, emptyPrescription()]);
@@ -107,12 +121,10 @@ const DoctorConsultation = () => {
     const today = new Date();
     const dateStr = today.toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" });
 
-    // Filter valid prescriptions & recommendations
     const validPrescriptions = prescriptions.filter((p) => p.medication.trim());
     const validRecommendations = recommendations.filter((r) => r.trim());
     const validLabOrders = labOrders.filter((l) => l.test.trim());
 
-    // 1. Create the consultation encounter
     const consultationEncounter: ConsultationEncounter = {
       type: "consultation",
       patientId: patient!.id,
@@ -133,7 +145,6 @@ const DoctorConsultation = () => {
     };
     addEncounter(consultationEncounter);
 
-    // 2. If there are lab orders, create a pending lab encounter
     if (validLabOrders.length > 0) {
       const labEncounter: LabEncounter = {
         type: "lab",
@@ -152,7 +163,6 @@ const DoctorConsultation = () => {
       addEncounter(labEncounter);
     }
 
-    // 3. Mark appointment as completed
     const apt = appointments.find((a) => a.id === appointmentId);
     if (apt) {
       (apt as any).status = "completada";
@@ -173,19 +183,32 @@ const DoctorConsultation = () => {
     );
   }
 
+  const initials = patient.name.split(" ").slice(0, 2).map((n) => n[0]).join("");
+
   return (
-    <div className="p-4 lg:p-8 space-y-6 max-w-4xl mx-auto">
-      {/* Back */}
-      <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1">
-        <ArrowLeft className="h-4 w-4" /> Volver a agenda
-      </Button>
+    <div className="p-4 lg:p-6 space-y-4">
+      {/* Top bar */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1">
+          <ArrowLeft className="h-4 w-4" /> Volver a agenda
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 lg:hidden"
+          onClick={() => setShowHistory(!showHistory)}
+        >
+          {showHistory ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+          Historial
+        </Button>
+      </div>
 
       {/* Patient Summary Bar */}
       <Card className="border-l-4 border-l-primary">
         <CardContent className="p-4">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
-              {patient.name.split(" ").slice(0, 2).map((n) => n[0]).join("")}
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary shrink-0">
+              {initials}
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold text-foreground">{patient.name}</h2>
@@ -203,13 +226,10 @@ const DoctorConsultation = () => {
                 )}
               </div>
             </div>
-            {/* Insurance */}
             <Badge variant="secondary" className="gap-1 text-sm">
               <Shield className="h-3.5 w-3.5" /> {patient.insurance}
             </Badge>
           </div>
-
-          {/* Alerts */}
           <div className="mt-3 flex flex-wrap gap-2">
             {patient.allergies && patient.allergies.length > 0 && (
               <Badge variant="destructive" className="gap-1">
@@ -220,8 +240,6 @@ const DoctorConsultation = () => {
               <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
             ))}
           </div>
-
-          {/* Reason */}
           <p className="mt-2 text-sm text-muted-foreground">
             <strong>Motivo de cita:</strong> {appointment.reason}
             {appointment.type === "telemedicina" && (
@@ -231,333 +249,318 @@ const DoctorConsultation = () => {
         </CardContent>
       </Card>
 
-      {/* SOAP Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Stethoscope className="h-5 w-5 text-primary" /> Registro de consulta
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Chief complaint */}
-          <div className="space-y-2">
-            <Label>Motivo de consulta</Label>
-            <div className="flex gap-2">
-              <Input
-                value={chiefComplaint}
-                onChange={(e) => setChiefComplaint(e.target.value)}
-                placeholder="¿Cuál es el motivo principal de la consulta?"
-              />
-              <VoiceDictation onTranscript={appendTo(setChiefComplaint)} />
-            </div>
-          </div>
-
-          {/* Symptoms */}
-          <div className="space-y-2">
-            <Label>Síntomas / Historia de enfermedad actual</Label>
-            <div className="flex gap-2">
-              <Textarea
-                value={symptoms}
-                onChange={(e) => setSymptoms(e.target.value)}
-                placeholder="Describa los síntomas que refiere el paciente..."
-                rows={3}
-              />
-              <VoiceDictation onTranscript={appendTo(setSymptoms)} />
-            </div>
-          </div>
-
-          {/* Physical exam */}
-          <div className="space-y-2">
-            <Label>Examen físico</Label>
-            <div className="flex gap-2">
-              <Textarea
-                value={physicalExam}
-                onChange={(e) => setPhysicalExam(e.target.value)}
-                placeholder="Hallazgos del examen físico..."
-                rows={3}
-              />
-              <VoiceDictation onTranscript={appendTo(setPhysicalExam)} />
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Diagnosis */}
-          <div className="space-y-2">
-            <Label>Diagnóstico</Label>
-            <div className="flex gap-2">
-              <Input
-                value={diagnosis}
-                onChange={(e) => setDiagnosis(e.target.value)}
-                placeholder="Diagnóstico principal"
-              />
-              <Select value={diagnosisStatus} onValueChange={(v) => setDiagnosisStatus(v as "Activo" | "Resuelto")}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Activo">Activo</SelectItem>
-                  <SelectItem value="Resuelto">Resuelto</SelectItem>
-                </SelectContent>
-              </Select>
-              <VoiceDictation onTranscript={appendTo(setDiagnosis)} />
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Prescriptions */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold">Recetas</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addPrescription} className="gap-1">
-                <Plus className="h-3 w-3" /> Agregar medicamento
-              </Button>
-            </div>
-            {prescriptions.map((rx, i) => (
-              <div key={i} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 items-end">
-                <Input
-                  placeholder="Medicamento"
-                  value={rx.medication}
-                  onChange={(e) => updatePrescription(i, "medication", e.target.value)}
-                />
-                <Input
-                  placeholder="Dosis"
-                  className="w-24"
-                  value={rx.dosage}
-                  onChange={(e) => updatePrescription(i, "dosage", e.target.value)}
-                />
-                <Input
-                  placeholder="Frecuencia"
-                  className="w-32"
-                  value={rx.frequency}
-                  onChange={(e) => updatePrescription(i, "frequency", e.target.value)}
-                />
-                <Input
-                  placeholder="Duración"
-                  className="w-24"
-                  value={rx.duration}
-                  onChange={(e) => updatePrescription(i, "duration", e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive"
-                  onClick={() => removePrescription(i)}
-                  disabled={prescriptions.length === 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-
-          <Separator />
-
-          {/* Recommendations */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold">Indicaciones</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addRecommendation} className="gap-1">
-                <Plus className="h-3 w-3" /> Agregar indicación
-              </Button>
-            </div>
-            {recommendations.map((rec, i) => (
-              <div key={i} className="flex gap-2">
-                <Input
-                  placeholder="Indicación para el paciente"
-                  value={rec}
-                  onChange={(e) => updateRecommendation(i, e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive shrink-0"
-                  onClick={() => removeRecommendation(i)}
-                  disabled={recommendations.length === 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-
-          <Separator />
-
-          {/* Lab Orders */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold flex items-center gap-2">
-                <FlaskConical className="h-4 w-4" /> Órdenes de laboratorio
-              </Label>
-              <Button type="button" variant="outline" size="sm" onClick={addLabOrder} className="gap-1">
-                <Plus className="h-3 w-3" /> Orden de laboratorio
-              </Button>
-            </div>
-            {labOrders.length === 0 && (
-              <p className="text-sm text-muted-foreground">Sin órdenes de laboratorio</p>
-            )}
-            {labOrders.map((order, i) => (
-              <div key={i} className="flex gap-2">
-                <Input
-                  placeholder="Nombre del examen (ej: Hemograma completo)"
-                  value={order.test}
-                  onChange={(e) => updateLabOrder(i, e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive shrink-0"
-                  onClick={() => removeLabOrder(i)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-
-          <Separator />
-
-          {/* Surgery referral */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold flex items-center gap-2">
-                <Scissors className="h-4 w-4" /> Referencia a cirugía
-              </Label>
-              {!surgeryReferral && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSurgeryReferral({ procedure: "", urgency: "Electiva", notes: "" })}
-                  className="gap-1"
-                >
-                  <Plus className="h-3 w-3" /> Agregar referencia
-                </Button>
-              )}
-            </div>
-            {surgeryReferral ? (
-              <div className="space-y-2 p-3 rounded-lg border border-border">
-                <Input
-                  placeholder="Procedimiento quirúrgico"
-                  value={surgeryReferral.procedure}
-                  onChange={(e) => setSurgeryReferral({ ...surgeryReferral, procedure: e.target.value })}
-                />
+      {/* Split layout: Form (left) + History (right) */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+        {/* LEFT — SOAP Form */}
+        <div className={`w-full ${showHistory ? "lg:w-[60%]" : "lg:w-full"} space-y-4 transition-all`}>
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Stethoscope className="h-5 w-5 text-primary" /> Registro de consulta
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* Chief complaint */}
+              <div className="space-y-2">
+                <Label>Motivo de consulta</Label>
                 <div className="flex gap-2">
-                  <Select
-                    value={surgeryReferral.urgency}
-                    onValueChange={(v) => setSurgeryReferral({ ...surgeryReferral, urgency: v as "Electiva" | "Urgente" })}
-                  >
-                    <SelectTrigger className="w-36">
+                  <Input
+                    value={chiefComplaint}
+                    onChange={(e) => setChiefComplaint(e.target.value)}
+                    placeholder="¿Cuál es el motivo principal de la consulta?"
+                  />
+                  <VoiceDictation onTranscript={appendTo(setChiefComplaint)} />
+                </div>
+              </div>
+
+              {/* Symptoms */}
+              <div className="space-y-2">
+                <Label>Síntomas / Historia de enfermedad actual</Label>
+                <div className="flex gap-2">
+                  <Textarea
+                    value={symptoms}
+                    onChange={(e) => setSymptoms(e.target.value)}
+                    placeholder="Describa los síntomas que refiere el paciente..."
+                    rows={3}
+                  />
+                  <VoiceDictation onTranscript={appendTo(setSymptoms)} />
+                </div>
+              </div>
+
+              {/* Physical exam */}
+              <div className="space-y-2">
+                <Label>Examen físico</Label>
+                <div className="flex gap-2">
+                  <Textarea
+                    value={physicalExam}
+                    onChange={(e) => setPhysicalExam(e.target.value)}
+                    placeholder="Hallazgos del examen físico..."
+                    rows={3}
+                  />
+                  <VoiceDictation onTranscript={appendTo(setPhysicalExam)} />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Diagnosis */}
+              <div className="space-y-2">
+                <Label>Diagnóstico</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={diagnosis}
+                    onChange={(e) => setDiagnosis(e.target.value)}
+                    placeholder="Diagnóstico principal"
+                  />
+                  <Select value={diagnosisStatus} onValueChange={(v) => setDiagnosisStatus(v as "Activo" | "Resuelto")}>
+                    <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Electiva">Electiva</SelectItem>
-                      <SelectItem value="Urgente">Urgente</SelectItem>
+                      <SelectItem value="Activo">Activo</SelectItem>
+                      <SelectItem value="Resuelto">Resuelto</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Input
-                    placeholder="Notas adicionales"
-                    className="flex-1"
-                    value={surgeryReferral.notes}
-                    onChange={(e) => setSurgeryReferral({ ...surgeryReferral, notes: e.target.value })}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive shrink-0"
-                    onClick={() => setSurgeryReferral(null)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <VoiceDictation onTranscript={appendTo(setDiagnosis)} />
                 </div>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Sin referencia quirúrgica</p>
-            )}
-          </div>
 
-          <Separator />
+              <Separator />
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label>Notas adicionales</Label>
-            <div className="flex gap-2">
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Observaciones, plan de seguimiento..."
-                rows={3}
-              />
-              <VoiceDictation onTranscript={appendTo(setNotes)} />
-            </div>
-          </div>
-
-          {/* Save */}
-          <Button onClick={handleSave} className="w-full gap-2" size="lg">
-            <Save className="h-4 w-4" /> Guardar consulta
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Previous history */}
-      <Collapsible>
-        <CollapsibleTrigger asChild>
-          <Button variant="outline" className="w-full justify-between gap-2">
-            <span className="flex items-center gap-2">
-              <FileText className="h-4 w-4" /> Historial previo del paciente ({previousEncounters.length})
-            </span>
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-3 space-y-3">
-          {previousEncounters.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Sin historial previo</p>
-          ) : (
-            previousEncounters.map((enc, i) => (
-              <Card key={i} className="bg-muted/30">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {enc.type === "consultation" ? "Consulta" : enc.type === "lab" ? "Laboratorio" : "Cirugía"}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">{enc.date}</span>
+              {/* Prescriptions */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <Pill className="h-4 w-4" /> Recetas
+                  </Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addPrescription} className="gap-1">
+                    <Plus className="h-3 w-3" /> Medicamento
+                  </Button>
+                </div>
+                {prescriptions.map((rx, i) => (
+                  <div key={i} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto_auto] gap-2 items-end">
+                    <Input placeholder="Medicamento" value={rx.medication} onChange={(e) => updatePrescription(i, "medication", e.target.value)} />
+                    <Input placeholder="Dosis" className="sm:w-24" value={rx.dosage} onChange={(e) => updatePrescription(i, "dosage", e.target.value)} />
+                    <Input placeholder="Frecuencia" className="sm:w-32" value={rx.frequency} onChange={(e) => updatePrescription(i, "frequency", e.target.value)} />
+                    <Input placeholder="Duración" className="sm:w-24" value={rx.duration} onChange={(e) => updatePrescription(i, "duration", e.target.value)} />
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removePrescription(i)} disabled={prescriptions.length === 1}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  {enc.type === "consultation" && (
-                    <div>
-                      <p className="font-medium text-sm text-foreground">{enc.diagnosis}</p>
-                      <p className="text-xs text-muted-foreground">{enc.doctor} · {enc.specialty}</p>
-                      {enc.prescriptions.length > 0 && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Rx: {enc.prescriptions.map((p) => p.medication).join(", ")}
-                        </p>
-                      )}
-                    </div>
+                ))}
+              </div>
+
+              <Separator />
+
+              {/* Recommendations */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Indicaciones</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addRecommendation} className="gap-1">
+                    <Plus className="h-3 w-3" /> Indicación
+                  </Button>
+                </div>
+                {recommendations.map((rec, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input placeholder="Indicación para el paciente" value={rec} onChange={(e) => updateRecommendation(i, e.target.value)} />
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeRecommendation(i)} disabled={recommendations.length === 1}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <Separator />
+
+              {/* Lab Orders */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <FlaskConical className="h-4 w-4" /> Órdenes de laboratorio
+                  </Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addLabOrder} className="gap-1">
+                    <Plus className="h-3 w-3" /> Orden
+                  </Button>
+                </div>
+                {labOrders.length === 0 && <p className="text-sm text-muted-foreground">Sin órdenes de laboratorio</p>}
+                {labOrders.map((order, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input placeholder="Nombre del examen (ej: Hemograma completo)" value={order.test} onChange={(e) => updateLabOrder(i, e.target.value)} />
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeLabOrder(i)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <Separator />
+
+              {/* Surgery referral */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <Scissors className="h-4 w-4" /> Referencia a cirugía
+                  </Label>
+                  {!surgeryReferral && (
+                    <Button type="button" variant="outline" size="sm" onClick={() => setSurgeryReferral({ procedure: "", urgency: "Electiva", notes: "" })} className="gap-1">
+                      <Plus className="h-3 w-3" /> Referencia
+                    </Button>
                   )}
-                  {enc.type === "lab" && (
-                    <div>
-                      <p className="text-sm text-foreground">{enc.lab}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {enc.labResults.map((l) => l.test).join(", ")}
-                      </p>
+                </div>
+                {surgeryReferral ? (
+                  <div className="space-y-2 p-3 rounded-lg border border-border">
+                    <Input placeholder="Procedimiento quirúrgico" value={surgeryReferral.procedure} onChange={(e) => setSurgeryReferral({ ...surgeryReferral, procedure: e.target.value })} />
+                    <div className="flex gap-2">
+                      <Select value={surgeryReferral.urgency} onValueChange={(v) => setSurgeryReferral({ ...surgeryReferral, urgency: v as "Electiva" | "Urgente" })}>
+                        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Electiva">Electiva</SelectItem>
+                          <SelectItem value="Urgente">Urgente</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input placeholder="Notas" className="flex-1" value={surgeryReferral.notes} onChange={(e) => setSurgeryReferral({ ...surgeryReferral, notes: e.target.value })} />
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => setSurgeryReferral(null)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
-                  {enc.type === "surgery" && (
-                    <div>
-                      <p className="font-medium text-sm text-foreground">{enc.procedure}</p>
-                      <p className="text-xs text-muted-foreground">{enc.surgeon} · {enc.hospital}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Sin referencia quirúrgica</p>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label>Notas adicionales</Label>
+                <div className="flex gap-2">
+                  <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones, plan de seguimiento..." rows={3} />
+                  <VoiceDictation onTranscript={appendTo(setNotes)} />
+                </div>
+              </div>
+
+              {/* Save */}
+              <Button onClick={handleSave} className="w-full gap-2" size="lg">
+                <Save className="h-4 w-4" /> Guardar consulta
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* RIGHT — Patient History Panel */}
+        {showHistory && (
+          <div className="w-full lg:w-[40%] lg:sticky lg:top-4">
+            <Card className="border-border/60">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-primary" /> Historial del paciente
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 hidden lg:flex"
+                    onClick={() => setShowHistory(false)}
+                  >
+                    <PanelRightClose className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Tabs defaultValue="consultas">
+                  <TabsList className="w-full rounded-none border-b bg-transparent px-4">
+                    <TabsTrigger value="consultas" className="text-xs gap-1 data-[state=active]:shadow-none">
+                      <Stethoscope className="h-3 w-3" /> Consultas ({prevConsultations.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="laboratorio" className="text-xs gap-1 data-[state=active]:shadow-none">
+                      <FlaskConical className="h-3 w-3" /> Labs ({prevLabs.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="cirugias" className="text-xs gap-1 data-[state=active]:shadow-none">
+                      <Scissors className="h-3 w-3" /> Cirugías ({prevSurgeries.length})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <ScrollArea className="h-[calc(100vh-320px)] min-h-[400px]">
+                    <div className="p-4">
+                      <TabsContent value="consultas" className="mt-0 space-y-3">
+                        {prevConsultations.length === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-6">Sin consultas previas</p>
+                        ) : (
+                          prevConsultations.map((enc, i) => {
+                            if (enc.type !== "consultation") return null;
+                            return (
+                              <div key={i}>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                                  <Clock className="h-3 w-3" />
+                                  {enc.date} · <span className="font-medium text-foreground">{enc.doctor}</span>
+                                </p>
+                                <ConsultationCard encounter={enc} defaultOpen={i === 0} />
+                              </div>
+                            );
+                          })
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="laboratorio" className="mt-0 space-y-3">
+                        {prevLabs.length === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-6">Sin resultados de laboratorio</p>
+                        ) : (
+                          prevLabs.map((enc, i) => {
+                            if (enc.type !== "lab") return null;
+                            return (
+                              <div key={i}>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                                  <Clock className="h-3 w-3" />
+                                  {enc.date} · <span className="font-medium text-foreground">{enc.lab}</span>
+                                </p>
+                                <LabCard encounter={enc} defaultOpen={i === 0} />
+                              </div>
+                            );
+                          })
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="cirugias" className="mt-0 space-y-3">
+                        {prevSurgeries.length === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-6">Sin cirugías previas</p>
+                        ) : (
+                          prevSurgeries.map((enc, i) => {
+                            if (enc.type !== "surgery") return null;
+                            return (
+                              <div key={i}>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                                  <Clock className="h-3 w-3" />
+                                  {enc.date} · <span className="font-medium text-foreground">{enc.surgeon}</span>
+                                </p>
+                                <SurgeryCard encounter={enc} defaultOpen={i === 0} />
+                              </div>
+                            );
+                          })
+                        )}
+                      </TabsContent>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </CollapsibleContent>
-      </Collapsible>
+                  </ScrollArea>
+                </Tabs>
+              </CardContent>
+            </Card>
+
+            {/* Toggle button when panel is hidden on desktop */}
+          </div>
+        )}
+
+        {/* Show panel button when hidden on desktop */}
+        {!showHistory && !isMobile && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="fixed right-6 top-20 gap-1.5 z-10"
+            onClick={() => setShowHistory(true)}
+          >
+            <PanelRightOpen className="h-4 w-4" /> Historial
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
