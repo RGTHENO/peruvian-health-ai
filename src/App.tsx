@@ -21,6 +21,7 @@ import Privacidad from "./pages/Privacidad";
 import Terminos from "./pages/Terminos";
 import NotFound from "./pages/NotFound";
 
+
 const queryClient = new QueryClient();
 
 const App = () => (
