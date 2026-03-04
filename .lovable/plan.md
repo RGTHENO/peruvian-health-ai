@@ -1,50 +1,71 @@
 
 
-## Plan: Make All Buttons and Navigation Fully Functional
+## Problema identificado y propuestas de mejora UI/UX
 
-### Problem
-Multiple buttons and navigation links across the app are non-functional — they either point to `/` (home) or have no action at all.
+### 1. Problema: Botón "Iniciar Sesión" duplicado en /historial
 
-### Non-functional elements identified
+En la página de Historial hay dos llamadas a iniciar sesión:
+- El botón del Navbar (esquina superior derecha)
+- El botón grande "Iniciar sesión para ver tu historial" en el header
 
-| Element | Location | Current behavior |
+**Solución**: Eliminar el botón redundante del header. En su lugar, hacer que el banner de demostración sea más prominente con un CTA integrado tipo "Inicia sesión para ver tu historial real" como link dentro del banner informativo.
+
+---
+
+### 2. Propuestas de mejora UI/UX Senior
+
+#### A. Navbar: Indicador de ruta activa
+Actualmente los links del navbar no muestran en qué página estás. Agregar un estilo activo (underline o color primary) al link que corresponde a la ruta actual.
+
+#### B. Homepage: Agregar sección de social proof
+- Estadísticas animadas: "+500 médicos", "+10,000 pacientes", "4.8 estrellas promedio"
+- Testimonios de pacientes reales con avatar y nombre
+
+#### C. Homepage: Barra de búsqueda rápida en el hero
+Permitir buscar médico directamente desde el hero sin ir al directorio. Un input con autocompletado por nombre/especialidad.
+
+#### D. DoctorCard: Agregar foto del doctor
+Actualmente solo muestra iniciales. Usar avatares placeholder con fotos genéricas de doctores para dar más confianza visual.
+
+#### E. Transiciones y micro-interacciones
+- Page transitions suaves entre rutas
+- Skeleton loaders en cards mientras cargan datos
+- Animaciones sutiles de entrada (fade-in + slide-up) en secciones al hacer scroll
+
+#### F. Historial: Estado vacío más atractivo
+Cuando el usuario no tiene sesión, mostrar una ilustración/icono grande con CTA claro en lugar de datos de ejemplo que confunden.
+
+#### G. Modo oscuro toggle
+Ya tienes las variables dark definidas en CSS pero no hay un toggle visible. Agregar un botón sol/luna en el Navbar.
+
+#### H. Directorio: Mapa integrado
+Ya tienes la memoria del proyecto que menciona OpenStreetMap/Leaflet. Agregar una vista de mapa split con la lista de doctores.
+
+#### I. Portal Médico: Notificaciones
+Agregar un icono de campana con badge de conteo en el sidebar del doctor para notificaciones de nuevas citas.
+
+#### J. Breadcrumbs en páginas internas
+Agregar navegación con breadcrumbs en DoctorProfile y otras páginas internas para mejorar la orientación del usuario.
+
+---
+
+### Prioridades recomendadas (por impacto)
+
+| Prioridad | Mejora | Impacto |
 |---|---|---|
-| "Soy Médico" button | Hero (Index) | No link |
-| "Teleconsulta" link | Navbar + Footer | Points to `/` |
-| "Mi Historial" link | Navbar + Footer | Points to `/` |
-| "Iniciar Sesión" button | Navbar | No action |
-| "Reservar cita" button | DoctorProfile | No confirmation after click |
-| "Portal Médico" link | Footer | Points to `/` |
-| "IA Clínica" link | Footer | Points to `/` |
-| "Privacidad" link | Footer | Points to `/` |
-| "Términos de Uso" link | Footer | Points to `/` |
-| "Configuración" button | DoctorSidebar | No action |
+| 1 | Arreglar botón duplicado en Historial | Bug visual |
+| 2 | Navbar con ruta activa | Orientación del usuario |
+| 3 | Dark mode toggle | Preferencia de usuario |
+| 4 | Búsqueda en hero + social proof | Conversión |
+| 5 | Micro-interacciones y skeleton loaders | Percepción de calidad |
+| 6 | Estado vacío atractivo en Historial | UX claridad |
+| 7 | Mapa en directorio | Feature diferenciadora |
 
-### New pages to create (6 pages)
+### Implementación técnica
 
-1. **`/teleconsulta`** — Teleconsulta page explaining the video consultation service, with a CTA to browse doctors filtered by telemedicine modality
-2. **`/historial`** — Medical history page showing a placeholder patient record view (diagnoses, prescriptions, lab results) with a prompt to log in
-3. **`/iniciar-sesion`** — Login page with email/password form (frontend only, no backend auth yet) with tabs for patient/doctor login
-4. **`/privacidad`** — Privacy policy page (Ley 29733 content)
-5. **`/terminos`** — Terms of use page
-6. **`/doctor/portal/configuracion`** — Doctor settings page within the portal layout (profile info, notification preferences)
-
-### Booking confirmation flow
-- When user clicks "Reservar" on DoctorProfile, show a confirmation dialog (Dialog component) summarizing: doctor name, selected time, price, and payment method options. Include a "Confirmar Reserva" button that shows a success toast via Sonner.
-
-### Updates to existing components
-
-- **`Navbar.tsx`**: Update "Teleconsulta" → `/teleconsulta`, "Mi Historial" → `/historial`, "Iniciar Sesión" → `Link to /iniciar-sesion`
-- **`Footer.tsx`**: Update all links to their correct routes (`/teleconsulta`, `/historial`, `/doctor/portal`, `/privacidad`, `/terminos`). Remove "IA Clínica" link (no standalone page needed — redirect to portal)
-- **`Index.tsx`**: Wrap "Soy Médico" button in `Link to="/iniciar-sesion"`
-- **`DoctorProfile.tsx`**: Add booking confirmation Dialog + success toast
-- **`DoctorSidebar.tsx`**: Update "Configuración" to link to `/doctor/portal/configuracion`
-- **`DoctorMobileNav.tsx`**: Add "Configuración" nav item
-- **`App.tsx`**: Register all 6 new routes (including `configuracion` as a nested route under the doctor portal)
-
-### Technical approach
-- All new pages follow existing patterns: Navbar + Footer wrapper for public pages, DoctorLayout for portal pages
-- Login page is UI-only (form with validation via react-hook-form + zod), no actual auth backend
-- Legal pages are static content with proper formatting
-- Booking confirmation uses existing Dialog + Sonner toast components
+- **Botón duplicado**: Modificar `Historial.tsx` lineas 29-37, reemplazar botón por texto con link dentro del banner
+- **Navbar activa**: Usar `useLocation()` en `Navbar.tsx` para comparar rutas y aplicar clase `text-primary`
+- **Dark mode**: Agregar toggle en Navbar usando `next-themes` (ya instalado)
+- **Animaciones**: Usar `tailwindcss-animate` (ya instalado) con intersection observer
+- **Social proof**: Nueva sección en `Index.tsx` entre hero y features
 
