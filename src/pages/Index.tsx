@@ -197,15 +197,15 @@ const Index = () => {
           <p className="mt-3 text-primary-foreground/80 max-w-lg mx-auto">
             Más de 500 especialistas verificados listos para atenderte.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
-            <Link to="/directorio">
-              <Button size="lg" variant="secondary">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Link to="/directorio" className="w-full sm:w-auto">
+              <Button size="lg" variant="secondary" className="h-12 w-full sm:w-auto">
                 <Search className="h-4 w-4" />
                 Buscar Especialista
               </Button>
             </Link>
-            <Link to="/doctor/portal">
-              <Button size="lg" variant="secondary">
+            <Link to="/doctor/portal" className="w-full sm:w-auto">
+              <Button size="lg" variant="secondary" className="h-12 w-full sm:w-auto">
                 <Stethoscope className="h-4 w-4" />
                 Soy Médico
               </Button>

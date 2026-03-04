@@ -39,17 +39,23 @@ const Navbar = () => {
       </div>
 
       {isOpen && (
-        <div className="md:hidden border-t border-border bg-card p-4 space-y-3">
-          <Link to="/directorio" onClick={() => setIsOpen(false)}>
-            <Button size="sm" className="h-11 w-full gap-1.5">
-              <CalendarCheck className="h-4 w-4" />
-              Agendar Cita
-            </Button>
-          </Link>
+        <div className="md:hidden border-t border-border bg-card">
+          <div className="container py-4">
+            <div className="grid grid-cols-2 gap-2">
+              <Link to="/directorio" onClick={() => setIsOpen(false)} className="min-w-0">
+                <Button size="sm" className="h-11 w-full gap-1.5 px-3">
+                  <CalendarCheck className="h-4 w-4" />
+                  Agendar Cita
+                </Button>
+              </Link>
 
-          <Link to="/iniciar-sesion" onClick={() => setIsOpen(false)}>
-            <Button size="sm" variant="outline" className="h-11 w-full">Iniciar Sesión</Button>
-          </Link>
+              <Link to="/iniciar-sesion" onClick={() => setIsOpen(false)} className="min-w-0">
+                <Button size="sm" variant="outline" className="h-11 w-full px-3">
+                  Iniciar Sesión
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       )}
     </nav>

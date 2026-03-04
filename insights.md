@@ -196,3 +196,31 @@ Validation after implementation:
 - `npm run test`: pass.
 - `npm run build`: pass.
 - `react-doctor`: 98/100 (warnings remain in unrelated backlog areas only).
+
+## 10) Mobile CTA Polishing + Vercel Preview Deployment
+
+Date: 2026-03-04
+
+Implemented files:
+- `src/components/Navbar.tsx`
+- `src/pages/Index.tsx`
+
+Applied changes:
+1. Mobile navbar CTA layout
+- Reworked the mobile menu CTA block from vertical stacking to a 2-column grid.
+- `Agendar Cita` and `Iniciar Sesión` now render side-by-side on mobile with consistent touch targets (`h-11`) and spacing (`gap-2`).
+- Preserved visual hierarchy: booking remains primary CTA, login remains secondary outline action.
+
+2. Final CTA button width consistency on mobile
+- Updated final landing CTA wrappers and buttons to use `w-full` on mobile and `sm:w-auto` on larger screens.
+- Result: `Buscar Especialista` and `Soy Médico` now have equal widths on mobile while preserving desktop behavior.
+
+Validation:
+- `npm run build`: pass after both UI adjustments.
+- `npm run lint`: fails due to pre-existing unrelated issues (e.g. `no-explicit-any` in other modules), not introduced by these changes.
+
+Deployment:
+- Deployed preview using `vercel-deploy` skill fallback script (`deploy.sh`) because `vercel` CLI was not installed in the environment.
+- Preview URL: `https://skill-deploy-yga3fdbe6p-codex-agent-deploys.vercel.app`
+- Claim URL: `https://vercel.com/claim-deployment?code=c788cb88-16cb-4f57-aea4-5a44a42a3ce2`
+- Preview status confirmed with HTTP `200`.
