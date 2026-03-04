@@ -1,71 +1,61 @@
 
 
-## Problema identificado y propuestas de mejora UI/UX
+## Reorganización del Historial Médico: Vista por Consultas (Timeline)
 
-### 1. Problema: Botón "Iniciar Sesión" duplicado en /historial
+### Problema actual
+Diagnósticos, recetas y laboratorios están en 3 columnas separadas. El paciente debe cruzar información mentalmente para entender qué pasó en cada visita médica.
 
-En la página de Historial hay dos llamadas a iniciar sesión:
-- El botón del Navbar (esquina superior derecha)
-- El botón grande "Iniciar sesión para ver tu historial" en el header
+### Solución: Vista Timeline por Consulta
 
-**Solución**: Eliminar el botón redundante del header. En su lugar, hacer que el banner de demostración sea más prominente con un CTA integrado tipo "Inicia sesión para ver tu historial real" como link dentro del banner informativo.
+Reorganizar los datos en una **línea de tiempo vertical** donde cada tarjeta representa una **consulta médica (encounter)**, agrupando dentro de ella el diagnóstico, recetas y labs asociados.
 
----
+```text
+┌─────────────────────────────────────────────────┐
+│  [Tabs: Consultas | Recetas | Laboratorio ]     │
+├─────────────────────────────────────────────────┤
+│                                                  │
+│  ● 15 Feb 2026 · Dr. Carlos Mendoza             │
+│  ┌─────────────────────────────────────────┐     │
+│  │ 🩺 Hipertensión arterial leve  [Activo] │     │
+│  │                                         │     │
+│  │ 💊 Receta: Losartán 50mg                │     │
+│  │    1 vez al día · 3 meses               │     │
+│  └─────────────────────────────────────────┘     │
+│                                                  │
+│  ● 10 Feb 2026 · Lab. Roe                        │
+│  ┌─────────────────────────────────────────┐     │
+│  │ 🧪 Hemograma completo → Normal          │     │
+│  │ 🧪 Perfil lipídico → LDL elevado        │     │
+│  └─────────────────────────────────────────┘     │
+│                                                  │
+│  ● 03 Ene 2026 · Dra. Ana Gutiérrez             │
+│  ┌─────────────────────────────────────────┐     │
+│  │ 🩺 Rinitis alérgica estacional [Resuelto]│    │
+│  │                                         │     │
+│  │ 💊 Receta: Loratadina 10mg              │     │
+│  │    1 vez al día · 14 días               │     │
+│  └─────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────┘
+```
 
-### 2. Propuestas de mejora UI/UX Senior
+### Cambios en `Historial.tsx`
 
-#### A. Navbar: Indicador de ruta activa
-Actualmente los links del navbar no muestran en qué página estás. Agregar un estilo activo (underline o color primary) al link que corresponde a la ruta actual.
+1. **Nuevo modelo de datos**: Reemplazar las 3 arrays separadas por un array `mockEncounters` que agrupa todo por consulta, con fecha, doctor, diagnóstico, recetas[] y labs[]
 
-#### B. Homepage: Agregar sección de social proof
-- Estadísticas animadas: "+500 médicos", "+10,000 pacientes", "4.8 estrellas promedio"
-- Testimonios de pacientes reales con avatar y nombre
+2. **Tabs con Radix UI**: Agregar tabs "Consultas" (vista timeline, default), "Recetas" (lista plana de todas las recetas), "Laboratorio" (lista plana de labs) para quienes quieran filtrar por tipo
 
-#### C. Homepage: Barra de búsqueda rápida en el hero
-Permitir buscar médico directamente desde el hero sin ir al directorio. Un input con autocompletado por nombre/especialidad.
+3. **Timeline vertical**: Cada encounter es una Card con línea temporal izquierda (border-left + dot), mostrando:
+   - Header: fecha + doctor + badge de status
+   - Sección diagnóstico con icono
+   - Sección recetas (si aplica) con icono de pastilla
+   - Sección labs (si aplica) con icono de flask
 
-#### D. DoctorCard: Agregar foto del doctor
-Actualmente solo muestra iniciales. Usar avatares placeholder con fotos genéricas de doctores para dar más confianza visual.
+4. **Tab "Recetas"**: Tabla simple con todas las recetas, medicamento, dosis, duración, doctor, fecha
 
-#### E. Transiciones y micro-interacciones
-- Page transitions suaves entre rutas
-- Skeleton loaders en cards mientras cargan datos
-- Animaciones sutiles de entrada (fade-in + slide-up) en secciones al hacer scroll
+5. **Tab "Laboratorio"**: Tabla simple con todos los resultados, test, resultado, laboratorio, fecha
 
-#### F. Historial: Estado vacío más atractivo
-Cuando el usuario no tiene sesión, mostrar una ilustración/icono grande con CTA claro en lugar de datos de ejemplo que confunden.
-
-#### G. Modo oscuro toggle
-Ya tienes las variables dark definidas en CSS pero no hay un toggle visible. Agregar un botón sol/luna en el Navbar.
-
-#### H. Directorio: Mapa integrado
-Ya tienes la memoria del proyecto que menciona OpenStreetMap/Leaflet. Agregar una vista de mapa split con la lista de doctores.
-
-#### I. Portal Médico: Notificaciones
-Agregar un icono de campana con badge de conteo en el sidebar del doctor para notificaciones de nuevas citas.
-
-#### J. Breadcrumbs en páginas internas
-Agregar navegación con breadcrumbs en DoctorProfile y otras páginas internas para mejorar la orientación del usuario.
-
----
-
-### Prioridades recomendadas (por impacto)
-
-| Prioridad | Mejora | Impacto |
-|---|---|---|
-| 1 | Arreglar botón duplicado en Historial | Bug visual |
-| 2 | Navbar con ruta activa | Orientación del usuario |
-| 3 | Dark mode toggle | Preferencia de usuario |
-| 4 | Búsqueda en hero + social proof | Conversión |
-| 5 | Micro-interacciones y skeleton loaders | Percepción de calidad |
-| 6 | Estado vacío atractivo en Historial | UX claridad |
-| 7 | Mapa en directorio | Feature diferenciadora |
-
-### Implementación técnica
-
-- **Botón duplicado**: Modificar `Historial.tsx` lineas 29-37, reemplazar botón por texto con link dentro del banner
-- **Navbar activa**: Usar `useLocation()` en `Navbar.tsx` para comparar rutas y aplicar clase `text-primary`
-- **Dark mode**: Agregar toggle en Navbar usando `next-themes` (ya instalado)
-- **Animaciones**: Usar `tailwindcss-animate` (ya instalado) con intersection observer
-- **Social proof**: Nueva sección en `Index.tsx` entre hero y features
+### Beneficios
+- Flujo mental natural: "fui al doctor → me diagnosticaron → me recetaron"
+- Alineado con FHIR Encounters
+- Tabs permiten vista rápida por categoría cuando se necesite
 
