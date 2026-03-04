@@ -1,87 +1,52 @@
 
 
-## Plan: Clinical Consultation Page with Voice Dictation
+## Analysis
 
-### What We're Building
+Currently, the notification system is purely cosmetic: DoctorSettings has toggle switches for notification preferences, but there is no actual notification delivery mechanism. No in-app notification center, no bell icon with badge, no notification data store.
 
-A full consultation workspace where doctors document encounters during patient visits, with voice dictation support and insurance visibility.
+## Plan: Non-Intrusive In-App Notification System
 
-### Key Pages & Components
+The goal is a subtle, respectful notification experience that informs without disrupting clinical workflows.
 
-#### 1. `src/pages/DoctorConsultation.tsx` (NEW)
+### Design Principles
+- **Quiet by default**: No sounds, no pop-ups blocking content. Use a bell icon with a small badge count.
+- **Batched, not real-time interruptions**: Notifications accumulate silently in a dropdown panel; the doctor checks them at their own pace.
+- **Sonner toasts only for user-initiated actions** (save, submit). Never auto-trigger toasts for incoming notifications.
+- **Respects settings**: The notification preferences in DoctorSettings will actually filter which notifications appear.
 
-Route: `/doctor/portal/consulta/:appointmentId`
+### Changes
 
-Layout:
+**1. Create notification data store (`src/data/notifications.ts`)**
+- Define a `Notification` type with `id`, `type` (appointment | reminder | cancellation | system), `title`, `message`, `timestamp`, `read`, `link` (optional route).
+- Seed with ~5 realistic mock notifications (e.g., "Juan Perez confirmed appointment", "Appointment in 30 min", "Carmen Rios cancelled").
 
-```text
-┌──────────────────────────────────────────────────────┐
-│  ← Volver a agenda                                   │
-│                                                      │
-│  ┌─ Patient Summary Bar ───────────────────────────┐ │
-│  │ Juan Pérez · 45 años · M · O+ · Rímac (Seguro) │ │
-│  │ ⚠ Alergias: Penicilina                          │ │
-│  │ Condiciones: [Hipertensión] [Diabetes tipo 2]   │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                      │
-│  ┌─ SOAP Form ─────────────────────────────────────┐ │
-│  │  Motivo de consulta  [🎤] _______________       │ │
-│  │  Síntomas            [🎤] _______________       │ │
-│  │  Examen físico       [🎤] _______________       │ │
-│  │  Diagnóstico         [🎤] _______________       │ │
-│  │  Estado: [Activo ▾]                              │ │
-│  │                                                  │ │
-│  │  ── Recetas ──                                   │ │
-│  │  [+ Agregar medicamento]                         │ │
-│  │  Medicamento | Dosis | Frecuencia | Duración     │ │
-│  │                                                  │ │
-│  │  ── Indicaciones ──                              │ │
-│  │  [+ Agregar indicación]                          │ │
-│  │                                                  │ │
-│  │  ── Órdenes ──                                   │ │
-│  │  [+ Orden de laboratorio]                        │ │
-│  │  [+ Referencia a cirugía]                        │ │
-│  │                                                  │ │
-│  │  Notas adicionales   [🎤] _______________       │ │
-│  │                                                  │ │
-│  │  [Guardar consulta]                              │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                      │
-│  ▸ Historial previo (colapsable, últimas consultas)  │
-└──────────────────────────────────────────────────────┘
-```
+**2. Create notification context (`src/contexts/NotificationContext.tsx`)**
+- React context with state for notifications list and user preferences (synced with DoctorSettings toggles).
+- Functions: `markAsRead(id)`, `markAllAsRead()`, `dismissNotification(id)`, `getUnreadCount()`.
+- Filter notifications based on saved preferences (newAppointment, reminder, cancellation, marketing).
 
-Key detail: The **patient summary bar** prominently shows insurance type (e.g., "Rímac", "SIS", "Pacífico") with a badge, plus blood type and allergies as clinical alerts. This is critical for doctors to know coverage before prescribing.
+**3. Create notification bell dropdown (`src/components/NotificationBell.tsx`)**
+- Bell icon (from lucide) with a small red dot/badge showing unread count (only when > 0).
+- Clicking opens a Popover (not a full page) with a scrollable list of notifications.
+- Each item shows: icon by type, title, relative time ("hace 5 min"), and a subtle unread indicator.
+- "Marcar todo como leido" link at top. Click a notification to navigate to its link and mark as read.
+- Empty state: "No tienes notificaciones" with a subtle icon.
 
-#### 2. `src/components/VoiceDictation.tsx` (NEW)
+**4. Integrate bell into DoctorLayout**
+- Add a top header bar to `DoctorLayout` (visible on both desktop and mobile) containing the NotificationBell in the top-right corner.
+- On mobile, the bell sits in the top bar above content, not in the bottom nav (to avoid clutter).
 
-Reusable microphone button using the **Web Speech API** (`SpeechRecognition`). Each text field gets one. Tap to start, tap to stop, text appends to the field. Works in Chrome/Edge. Shows a graceful fallback message in unsupported browsers.
+**5. Wire DoctorSettings preferences to context**
+- The toggle switches in DoctorSettings will read/write from the NotificationContext so preferences actually filter visible notifications.
+- "Guardar preferencias" persists to localStorage.
 
-#### 3. Entry Points — "Atender" Buttons
+### Files to create
+- `src/data/notifications.ts` — types and mock data
+- `src/contexts/NotificationContext.tsx` — state management
+- `src/components/NotificationBell.tsx` — bell + popover dropdown
 
-- **`src/pages/DoctorDashboard.tsx`**: Add "Atender" button next to each active appointment in the today's list, linking to `/doctor/portal/consulta/:appointmentId`
-- **`src/pages/DoctorAgenda.tsx`**: Add "Atender" button on each non-cancelled/non-completed appointment slot
-
-#### 4. Route — `src/App.tsx`
-
-Add `consulta/:appointmentId` under the doctor layout.
-
-#### 5. Data Flow — `src/data/encounters.ts`
-
-Add a helper function `addEncounter()` that pushes a new encounter to the mock array. When the doctor saves:
-- Creates a `ConsultationEncounter` with `patientId` from the appointment
-- Optionally creates pending lab/surgery orders
-- Marks appointment status as `completada`
-- New records appear immediately in both doctor's patient record and patient's history
-
-### Files Summary
-
-| File | Action |
-|------|--------|
-| `src/pages/DoctorConsultation.tsx` | **New** — SOAP form with patient summary (including insurance) + voice |
-| `src/components/VoiceDictation.tsx` | **New** — Mic button using Web Speech API |
-| `src/pages/DoctorDashboard.tsx` | Add "Atender" button to appointment cards |
-| `src/pages/DoctorAgenda.tsx` | Add "Atender" button to time slots |
-| `src/App.tsx` | Add route `consulta/:appointmentId` |
-| `src/data/encounters.ts` | Add `addEncounter` helper for saving new records |
+### Files to edit
+- `src/layouts/DoctorLayout.tsx` — add header bar with NotificationBell
+- `src/pages/DoctorSettings.tsx` — connect toggles to NotificationContext
+- `src/App.tsx` — wrap doctor routes with NotificationProvider
 
