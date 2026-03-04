@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Stethoscope, Pill, ClipboardList, FlaskConical, FileText, Share2, StickyNote, ChevronDown } from "lucide-react";
 import type { ConsultationEncounter } from "@/data/encounters";
+import { generatePrescriptionPdf } from "@/lib/generate-prescription-pdf";
+import { patients } from "@/data/appointments";
 
 interface Props {
   encounter: ConsultationEncounter;
@@ -112,7 +114,15 @@ const ConsultationCard = ({ encounter, defaultOpen = false }: Props) => {
           {/* Actions */}
           <div className="border-t border-border/60" />
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" disabled className="gap-1.5 text-muted-foreground text-xs h-8 px-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs h-8 px-2"
+              onClick={() => {
+                const patient = patients.find((p) => p.id === encounter.patientId);
+                generatePrescriptionPdf(encounter, patient);
+              }}
+            >
               <FileText className="h-3.5 w-3.5" /> Descargar PDF
             </Button>
             <Button variant="ghost" size="sm" disabled className="gap-1.5 text-muted-foreground text-xs h-8 px-2">

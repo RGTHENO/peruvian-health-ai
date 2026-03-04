@@ -1,7 +1,10 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Pill, ClipboardList, Calendar, ChevronDown } from "lucide-react";
+import { Pill, ClipboardList, Calendar, ChevronDown, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { ConsultationEncounter } from "@/data/encounters";
+import { generatePrescriptionPdf } from "@/lib/generate-prescription-pdf";
+import { patients } from "@/data/appointments";
 
 interface Props {
   encounter: ConsultationEncounter;
@@ -71,6 +74,20 @@ const PrescriptionCard = ({ encounter, defaultOpen = false }: Props) => {
               </div>
             </>
           )}
+          {/* Download PDF */}
+          <div className="border-t border-border/60 pt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs h-8 px-2"
+              onClick={() => {
+                const patient = patients.find((p) => p.id === encounter.patientId);
+                generatePrescriptionPdf(encounter, patient);
+              }}
+            >
+              <FileText className="h-3.5 w-3.5" /> Descargar PDF
+            </Button>
+          </div>
         </div>
       </CollapsibleContent>
     </Collapsible>
