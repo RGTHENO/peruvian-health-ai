@@ -82,7 +82,19 @@ const SharePrescriptionDialog = ({ encounter, patient, open, onOpenChange }: Pro
   const email = patient?.email || "";
   const text = buildPrescriptionText(encounter, patient);
 
-  const handleWhatsApp = () => {
+  const handleWhatsApp = async () => {
+    const plainText = text.replace(/\*/g, "").replace(/_/g, "");
+    // Try native share (mobile) — keeps text out of URL
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Receta Médica", text: plainText });
+        onOpenChange(false);
+        return;
+      } catch {
+        // User cancelled or share failed — fall back
+      }
+    }
+    // Fallback: open WhatsApp with text in URL
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
     onOpenChange(false);
