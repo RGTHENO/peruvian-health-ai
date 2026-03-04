@@ -1,57 +1,83 @@
 
 
-## Critical Analysis of Current Lab Card
+## Problem
 
-Looking at the screenshot, I identify these issues:
+The doctor clicks a patient card and sees a small dialog with only basic contact info and a list of appointment dates. This is almost useless clinically. A doctor needs to see the patient's **full medical history** (consultations, labs, surgeries, prescriptions) to make informed decisions during a visit.
 
-1. **Number "165" is too large** — the `text-xl` creates a jarring size jump vs the test name. It screams "dashboard KPI", not "medical result row"
-2. **"ref < 130 mg/dL" is cryptic** — still too technical. The dot separator `·` gets lost
-3. **Abnormal row background** (`bg-destructive/[0.04]`) is barely visible — the pink tint is too subtle to signal importance
-4. **Status chips are too small** and too far right — they float disconnected from the result they describe
-5. **"Normal" label for Hemograma** is redundant with the green chip — wastes a full row height for minimal info
-6. **Header icon** (flask in gray box) is bland. The `bg-accent` box looks like a placeholder
-7. **Dividers** (`divide-border/30`) are too faint — rows blend together
-8. **"Descargar PDF" button** is orphaned at the bottom with too much padding above
-9. **Overall vertical rhythm** — rows have inconsistent density. Numeric rows are tall, non-numeric rows are short
+Currently, the rich clinical data (encounters from `encounters.ts`) exists and is beautifully rendered in the patient-facing `/historial` page, but is completely disconnected from the doctor portal.
 
-## Redesign: Modern Clinical Card
+## Solution: Dedicated Patient Record Page
 
-Inspired by Apple Health, Headspace, and fintech apps. Key principles:
-- **Consistent row height** regardless of content type
-- **Left color accent strip** on abnormal results instead of full-row tint
-- **Inline status** next to the value, not floating on the far right
-- **Tighter typography scale**: result values at `text-base font-bold`, not `text-xl`
+Instead of a dialog, clicking a patient card navigates to a **full-page patient record** at `/doctor/portal/pacientes/:patientId`. This page becomes the doctor's primary clinical tool.
+
+### Page Structure
 
 ```text
-┌────────────────────────────────────────────────────────┐
-│  🧪 Laboratorio Roe                          4✓  1⚠  │
-│     10 Feb 2026 · Dr. Carlos Mendoza              ▼   │
-├────────────────────────────────────────────────────────┤
-│ ┃  Colesterol LDL                                      │
-│ ┃  165 mg/dL  ·  ideal < 130        ⊘ Elevado         │
-│                                                        │
-│    Hemograma completo                                  │
-│    Normal                            ✓ En rango        │
-│                                                        │
-│    Colesterol HDL                                      │
-│    52 mg/dL  ·  ideal > 40           ✓ En rango        │
-│    ...                                                 │
-│                                                        │
-│    📄 Descargar PDF                                    │
-└────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  ← Volver a pacientes                               │
+│                                                      │
+│  ┌─────────────────────────────────────────────────┐ │
+│  │ 👤 Juan Pérez Sánchez                           │ │
+│  │ 45 años · Masculino · Rímac · +51 987 654 321  │ │
+│  │ [Hipertensión] [Diabetes tipo 2]                │ │
+│  │                                                 │ │
+│  │ Alergias: Penicilina    Sangre: O+              │ │
+│  └─────────────────────────────────────────────────┘ │
+│                                                      │
+│  [Consultas] [Cirugías] [Recetas] [Laboratorio]      │
+│                                                      │
+│  (Same timeline + cards as /historial, reusing       │
+│   ConsultationCard, LabCard, SurgeryCard,            │
+│   PrescriptionCard components)                       │
+│                                                      │
+│  ┌─────────────────────────────────────────────────┐ │
+│  │ 📅 Próximas citas                               │ │
+│  │ 2026-03-04 09:00 — Resultados de laboratorio    │ │
+│  └─────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────┘
 ```
 
-## Changes to `src/components/LabCard.tsx`
+### Why a full page instead of a bigger dialog
 
-1. **Result values**: `text-base font-bold` (not `text-xl`) — proportional to row
-2. **Reference text**: Change "ref < 130 mg/dL" → "ideal < 130" — shorter, clearer
-3. **Abnormal rows**: Add a `border-l-3 border-amber-500` left accent strip + slightly warmer background `bg-amber-50/60 dark:bg-amber-950/20` instead of barely-visible pink
-4. **Status badges**: Use amber/orange for abnormal (not destructive red — it's a warning, not an error). Green for normal. Slightly larger padding
-5. **Consistent row padding**: `py-3 px-4` for all rows, same height
-6. **Header**: Replace bland gray icon box with a subtle colored circle. Show counts as colored dots/pills
-7. **Dividers**: Use `border-border/60` — visible but not heavy
-8. **PDF button**: Less margin above, aligned with content
-9. **Non-numeric results**: Same row structure, value on second line as `text-sm text-muted-foreground`
+- Dialogs constrain vertical space; medical records are inherently long
+- A dedicated route is bookmarkable, shareable between doctors
+- The doctor can focus entirely on one patient without the grid behind
+- Mobile: a dialog would be nearly full-screen anyway; a page is cleaner
 
-No file changes needed to `encounters.ts` — data is fine.
+## Implementation Plan
+
+### 1. Extend Patient data model (`src/data/appointments.ts`)
+
+Add clinical fields to `Patient`: `bloodType`, `allergies`, `emergencyContact`. Link patients to encounters by adding a `patientId` field to existing mock encounters in `encounters.ts`.
+
+### 2. Create patient record page (`src/pages/DoctorPatientRecord.tsx`)
+
+- **Header**: Patient summary card (name, age, gender, insurance, phone, email, conditions, allergies, blood type)
+- **Tabs**: Reuse the same `Tabs` structure from `Historial.tsx` with the 4 tabs (Consultas, Cirugías, Recetas, Laboratorio), rendering the same card components (`ConsultationCard`, `LabCard`, `SurgeryCard`, `PrescriptionCard`)
+- **Sidebar section**: Upcoming appointments for this patient
+- Filter encounters by `patientId`
+
+### 3. Add route (`src/App.tsx`)
+
+Add nested route: `pacientes/:patientId` under the doctor layout, rendering `DoctorPatientRecord`.
+
+### 4. Update patient list (`src/pages/DoctorPatients.tsx`)
+
+- Replace `onClick → setSelectedPatient` with `navigate(/doctor/portal/pacientes/${patient.id})`
+- Remove the Dialog entirely
+- Keep the search and grid as-is
+
+### 5. Update encounters data (`src/data/encounters.ts`)
+
+Add `patientId` to each encounter interface and mock data so records can be filtered per patient. Distribute existing encounters across patients (e.g., Juan gets the hypertension consultation and cholesterol labs, Roberto gets the cardiac encounters, etc.).
+
+### Summary of files changed
+
+| File | Action |
+|------|--------|
+| `src/data/appointments.ts` | Add `bloodType`, `allergies`, `emergencyContact` to Patient |
+| `src/data/encounters.ts` | Add `patientId` to all encounter types and mock data |
+| `src/pages/DoctorPatientRecord.tsx` | **New** — full patient record page |
+| `src/pages/DoctorPatients.tsx` | Replace dialog with navigation |
+| `src/App.tsx` | Add route `pacientes/:patientId` |
 
