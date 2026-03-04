@@ -1,16 +1,30 @@
 
 
-## Issue
+## Problem
 
-The dropdown menu is too wide and extends leftward, overlapping the notification bell area. It should be narrower and aligned strictly under the doctor profile button.
+The public navbar shows "Mi Historial" (requires login) and the Index page has a "Soy Médico" button — both inappropriate for unauthenticated users. The user wants to simplify navigation to focus on the core patient journey: finding a doctor and booking an appointment.
 
-## Fix
+## Plan
 
-In `src/layouts/DoctorLayout.tsx`, reduce the dropdown width from `w-56` to `w-48` and ensure `align="end"` keeps it right-aligned under the trigger button. This way the dropdown's right edge matches the button's right edge and doesn't bleed over the bell icon.
+### 1. Redesign Navbar (`src/components/Navbar.tsx`)
 
-### File: `src/layouts/DoctorLayout.tsx`
-- Change `DropdownMenuContent` className from `w-56` to `w-48`
-- Keep `align="end"` and `sideOffset={8}` as-is
+Replace current nav links with:
+- **Directorio Médico** — link to `/directorio`
+- **Agendar Cita** — a prominent CTA button with a dropdown (Popover) offering two options:
+  - **Cita Presencial** — navigates to `/directorio?tipo=presencial` with a MapPin icon
+  - **Cita Virtual** — navigates to `/directorio?tipo=telemedicina` with a Video icon
 
-Single-line change, no structural modifications needed.
+Remove "Teleconsulta" as a standalone link (folded into the "Agendar Cita" flow). Keep "Iniciar Sesión" and theme toggle.
+
+Desktop layout: `Logo | Directorio Médico | [Agendar Cita ▾] | theme | Iniciar Sesión`
+
+Mobile menu: Same items stacked vertically, with the two appointment options shown inline (no popover needed on mobile — just two buttons/links).
+
+### 2. Remove "Soy Médico" from Index (`src/pages/Index.tsx`)
+
+Remove the "Soy Médico" button from the hero section (lines 77-83). The hero already has the search bar which is the primary CTA.
+
+### Files to edit
+- `src/components/Navbar.tsx` — redesign nav links + add Agendar Cita popover
+- `src/pages/Index.tsx` — remove "Soy Médico" button
 
