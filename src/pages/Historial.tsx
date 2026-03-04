@@ -4,7 +4,8 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Pill, FlaskConical, Calendar, Lock } from "lucide-react";
+import { FileText, Pill, FlaskConical, Calendar, Lock, ClipboardList } from "lucide-react";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
 const mockDiagnoses = [
   { date: "15 Feb 2026", doctor: "Dr. Carlos Mendoza", diagnosis: "Hipertensión arterial leve", status: "Activo" },
@@ -22,31 +23,34 @@ const mockLabResults = [
 ];
 
 const Historial = () => {
+  const revealRef = useScrollReveal();
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-1 container py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold font-serif text-foreground">Mi Historial Médico</h1>
-            <p className="text-muted-foreground mt-1">Expediente clínico digital con estándar FHIR</p>
-          </div>
-          <Link to="/iniciar-sesion">
-            <Button className="gap-2"><Lock className="h-4 w-4" /> Iniciar sesión para ver tu historial</Button>
-          </Link>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold font-serif text-foreground">Mi Historial Médico</h1>
+          <p className="text-muted-foreground mt-1">Expediente clínico digital con estándar FHIR</p>
         </div>
 
-        <div className="bg-muted/50 border border-border rounded-lg p-4 mb-8 flex items-start gap-3">
-          <Lock className="h-5 w-5 text-muted-foreground mt-0.5" />
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-5 mb-8 flex items-start gap-4">
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <ClipboardList className="h-6 w-6 text-primary" />
+          </div>
           <div>
-            <p className="text-sm font-medium text-foreground">Vista de demostración</p>
-            <p className="text-sm text-muted-foreground">
-              Los datos mostrados son de ejemplo. Inicia sesión para acceder a tu historial médico real.
+            <p className="text-sm font-semibold text-foreground">Vista de demostración</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Los datos mostrados son de ejemplo.{" "}
+              <Link to="/iniciar-sesion" className="text-primary font-medium hover:underline">
+                Inicia sesión
+              </Link>{" "}
+              para acceder a tu historial médico real.
             </p>
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div ref={revealRef} className="grid gap-6 lg:grid-cols-3 reveal-on-scroll">
           {/* Diagnoses */}
           <Card>
             <CardHeader>
