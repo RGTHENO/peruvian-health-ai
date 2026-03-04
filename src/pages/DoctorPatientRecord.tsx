@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,9 @@ import {
   FlaskConical,
   Calendar,
   UserCheck,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { patients, appointments } from "@/data/appointments";
 import { mockEncounters } from "@/data/encounters";
 import type { ConsultationEncounter, LabEncounter, SurgeryEncounter } from "@/data/encounters";
@@ -28,13 +30,44 @@ import SurgeryCard from "@/components/SurgeryCard";
 const DoctorPatientRecord = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
+  const [search, setSearch] = useState("");
 
   const patient = useMemo(() => patients.find((p) => p.id === patientId), [patientId]);
 
-  const encounters = useMemo(
+  const allEncounters = useMemo(
     () => mockEncounters.filter((e) => e.patientId === patientId),
     [patientId]
   );
+
+  const encounters = useMemo(() => {
+    if (!search.trim()) return allEncounters;
+    const q = search.toLowerCase();
+    return allEncounters.filter((e) => {
+      if (e.type === "consultation") {
+        return (
+          e.diagnosis.toLowerCase().includes(q) ||
+          e.doctor.toLowerCase().includes(q) ||
+          e.specialty.toLowerCase().includes(q) ||
+          e.prescriptions.some((p) => p.medication.toLowerCase().includes(q)) ||
+          e.recommendations.some((r) => r.toLowerCase().includes(q))
+        );
+      }
+      if (e.type === "lab") {
+        return (
+          e.lab.toLowerCase().includes(q) ||
+          e.orderedBy.toLowerCase().includes(q) ||
+          e.labResults.some((l) => l.test.toLowerCase().includes(q))
+        );
+      }
+      return (
+        e.procedure.toLowerCase().includes(q) ||
+        e.surgeon.toLowerCase().includes(q) ||
+        e.hospital.toLowerCase().includes(q) ||
+        e.preOpDiagnosis.toLowerCase().includes(q) ||
+        e.postOpDiagnosis.toLowerCase().includes(q)
+      );
+    });
+  }, [allEncounters, search]);
 
   const upcomingAppointments = useMemo(
     () =>
@@ -172,6 +205,17 @@ const DoctorPatientRecord = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar por diagnóstico, medicamento, doctor..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
 
       {/* Clinical history tabs */}
       <Tabs defaultValue="consultas">
