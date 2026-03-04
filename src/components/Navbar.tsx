@@ -28,7 +28,11 @@ const Navbar = () => {
         </div>
 
         <div className="md:hidden">
-          <button onClick={() => setIsOpen(!isOpen)}>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+          >
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
@@ -37,14 +41,14 @@ const Navbar = () => {
       {isOpen && (
         <div className="md:hidden border-t border-border bg-card p-4 space-y-3">
           <Link to="/directorio" onClick={() => setIsOpen(false)}>
-            <Button size="sm" className="w-full gap-1.5">
+            <Button size="sm" className="h-11 w-full gap-1.5">
               <CalendarCheck className="h-4 w-4" />
               Agendar Cita
             </Button>
           </Link>
 
           <Link to="/iniciar-sesion" onClick={() => setIsOpen(false)}>
-            <Button size="sm" variant="outline" className="w-full">Iniciar Sesión</Button>
+            <Button size="sm" variant="outline" className="h-11 w-full">Iniciar Sesión</Button>
           </Link>
         </div>
       )}

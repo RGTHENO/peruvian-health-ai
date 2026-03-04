@@ -82,11 +82,11 @@ const PrescriptionCard = ({ encounter, defaultOpen = false }: Props) => {
 
             {/* Actions */}
             <div className="border-t border-border/60 pt-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-1.5 text-xs h-8 px-2"
+                  className="h-10 justify-start gap-1.5 px-2 text-xs"
                   onClick={() => generatePrescriptionPdf(encounter, patient)}
                 >
                   <FileText className="h-3.5 w-3.5" /> Descargar PDF
@@ -94,7 +94,7 @@ const PrescriptionCard = ({ encounter, defaultOpen = false }: Props) => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-1.5 text-xs h-8 px-2"
+                  className="h-10 justify-start gap-1.5 px-2 text-xs"
                   onClick={() => setShareOpen(true)}
                 >
                   <Share2 className="h-3.5 w-3.5" /> Compartir

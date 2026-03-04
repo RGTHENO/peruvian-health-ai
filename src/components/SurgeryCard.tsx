@@ -191,11 +191,11 @@ const SurgeryCard = ({ encounter, defaultOpen = false }: Props) => {
           )}
 
           {/* Actions */}
-          <div className="flex gap-2 pt-1">
-            <Button variant="outline" size="sm" disabled className="gap-1.5">
+          <div className="flex flex-col gap-2 pt-1 sm:flex-row">
+            <Button variant="outline" size="sm" disabled className="h-10 justify-start gap-1.5">
               <FileText className="h-3.5 w-3.5" /> Descargar PDF
             </Button>
-            <Button variant="outline" size="sm" disabled className="gap-1.5">
+            <Button variant="outline" size="sm" disabled className="h-10 justify-start gap-1.5">
               <Share2 className="h-3.5 w-3.5" /> Compartir
             </Button>
           </div>

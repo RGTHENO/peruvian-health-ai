@@ -5,17 +5,55 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Brain, ShieldCheck, MessageCircle, Stethoscope, CalendarCheck, Star, Users, UserCheck } from "lucide-react";
+import { Search, Brain, ShieldCheck, MessageCircle, Stethoscope, CalendarCheck, Star, Users, UserCheck, ArrowRight } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import heroImage from "@/assets/hero-health.jpg";
 
 const features = [
-  { icon: Search, title: "Directorio Inteligente", desc: "Encuentra médicos por especialidad, seguro, ubicación y disponibilidad en tiempo real." },
-  { icon: Brain, title: "IA Clínica Ambient", desc: "Transcripción automática de consultas con IA para que el médico se enfoque en ti." },
-  { icon: MessageCircle, title: "Chatbot WhatsApp & Telegram", desc: "Agenda citas, recibe recordatorios y pre-triaje inteligente por mensajería." },
-  { icon: Stethoscope, title: "Historial Médico Portátil", desc: "Tu expediente clínico digital con estándar FHIR, accesible desde cualquier lugar." },
-  { icon: CalendarCheck, title: "Citas y Pagos en Línea", desc: "Reserva y paga con Culqi, Yape o Plin de forma rápida y segura." },
-  { icon: ShieldCheck, title: "Cumplimiento Legal", desc: "Datos protegidos bajo la Ley 29733, cifrado de extremo a extremo." },
+  {
+    icon: Search,
+    title: "Directorio Inteligente",
+    desc: "Encuentra médicos por especialidad, seguro y disponibilidad en tiempo real.",
+    href: "/directorio",
+    cta: "Explorar médicos",
+    featured: true,
+  },
+  {
+    icon: Brain,
+    title: "IA Clínica Ambient",
+    desc: "Transcripción automática para consultas más precisas y menos carga operativa.",
+    href: "/doctor/portal",
+    cta: "Ver portal médico",
+    featured: true,
+  },
+  {
+    icon: MessageCircle,
+    title: "Chatbot WhatsApp & Telegram",
+    desc: "Agenda citas y recibe recordatorios por mensajería con pre-triaje inteligente.",
+    href: "/teleconsulta",
+    cta: "Ver teleconsulta",
+  },
+  {
+    icon: Stethoscope,
+    title: "Historial Médico Portátil",
+    desc: "Tu expediente digital FHIR, disponible en cualquier momento y dispositivo.",
+    href: "/historial",
+    cta: "Ver historial",
+  },
+  {
+    icon: CalendarCheck,
+    title: "Citas y Pagos en Línea",
+    desc: "Reserva y paga en minutos con Culqi, Yape o Plin.",
+    href: "/directorio",
+    cta: "Reservar cita",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Cumplimiento Legal",
+    desc: "Protección de datos bajo Ley 29733 y cifrado de extremo a extremo.",
+    href: "/privacidad",
+    cta: "Revisar privacidad",
+  },
 ];
 
 const stats = [
@@ -46,30 +84,46 @@ const Index = () => {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroImage} alt="Doctora peruana consultando con paciente" className="w-full h-full object-cover" />
+          <img
+            src={heroImage}
+            alt="Doctora peruana consultando con paciente"
+            width={1920}
+            height={1088}
+            decoding="async"
+            loading="eager"
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 via-foreground/60 to-foreground/30" />
         </div>
-        <div className="relative container py-24 md:py-36">
+        <div className="relative container py-16 sm:py-20 md:py-36">
           <div className="max-w-xl">
-            <h1 className="text-4xl md:text-5xl font-bold font-serif text-primary-foreground leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-serif text-primary-foreground leading-tight">
               Tu salud, conectada con los mejores médicos del Perú
             </h1>
-            <p className="mt-4 text-lg text-primary-foreground/80">
+            <p className="mt-4 text-base sm:text-lg text-primary-foreground/80">
               Encuentra especialistas, agenda citas al instante y accede a tu historial médico desde cualquier dispositivo.
             </p>
 
             {/* Quick Search */}
-            <form onSubmit={handleSearch} className="mt-8 flex gap-2">
+            <form onSubmit={handleSearch} className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <label htmlFor="home-search" className="sr-only">
+                  Buscar por especialidad o nombre
+                </label>
+                <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  id="home-search"
+                  name="q"
+                  type="search"
+                  autoComplete="off"
+                  spellCheck={false}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por especialidad o nombre..."
+                  placeholder="Buscar por especialidad o nombre…"
                   className="pl-10 h-12 bg-background/95 border-background/20"
                 />
               </div>
-              <Button type="submit" size="lg" className="h-12 px-6">
+              <Button type="submit" size="lg" className="h-12 w-full px-6 sm:w-auto">
                 Buscar
               </Button>
             </form>
@@ -96,34 +150,48 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section ref={featuresRef} className="container py-20 reveal-on-scroll">
+      <section ref={featuresRef} className="container py-14 sm:py-20 reveal-on-scroll" aria-labelledby="features-title">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-3xl font-bold font-serif text-foreground">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Funcionalidades clave</p>
+          <h2 id="features-title" className="mt-3 text-2xl sm:text-3xl font-bold font-serif text-foreground text-pretty">
             Una plataforma integral para la salud
           </h2>
-          <p className="mt-3 text-muted-foreground">
+          <p className="mt-3 text-muted-foreground text-pretty">
             Tecnología de punta con IA, interoperabilidad y pagos locales para transformar la atención médica en el Perú.
           </p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
-            <Card key={f.title} className="group hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="h-11 w-11 rounded-lg bg-accent flex items-center justify-center mb-4">
-                  <f.icon className="h-5 w-5 text-accent-foreground" />
-                </div>
-                <h3 className="font-semibold text-foreground mb-2">{f.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-              </CardContent>
-            </Card>
+            <Link
+              key={f.title}
+              to={f.href}
+              className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label={`${f.cta}: ${f.title}`}
+            >
+              <Card className={`h-full border transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg ${
+                f.featured ? "border-primary/30 bg-accent/20" : "border-border"
+              }`}>
+                <CardContent className="p-6">
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-accent">
+                    <f.icon className="h-5 w-5 text-accent-foreground" />
+                  </div>
+                  <h3 className="mb-2 font-semibold text-foreground">{f.title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary transition-transform group-hover:translate-x-0.5">
+                    {f.cta}
+                    <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                  </span>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </section>
 
       {/* CTA — Doble conversión */}
-      <section className="bg-primary py-16">
+      <section className="bg-primary py-12 sm:py-16">
         <div className="container text-center">
-          <h2 className="text-3xl font-bold font-serif text-primary-foreground">
+          <h2 className="text-2xl sm:text-3xl font-bold font-serif text-primary-foreground">
             Encuentra tu médico ideal
           </h2>
           <p className="mt-3 text-primary-foreground/80 max-w-lg mx-auto">

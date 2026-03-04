@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,11 +11,7 @@ import { useNotifications } from "@/contexts/NotificationContext";
 
 const DoctorSettings = () => {
   const { preferences, setPreferences, savePreferences } = useNotifications();
-  const [localPrefs, setLocalPrefs] = useState(preferences);
-
-  useEffect(() => {
-    setLocalPrefs(preferences);
-  }, [preferences]);
+  const [localPrefs, setLocalPrefs] = useState(() => preferences);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +25,7 @@ const DoctorSettings = () => {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-bold font-serif text-foreground">Configuración</h1>
         <p className="text-muted-foreground">Administra tu perfil y preferencias</p>
@@ -45,7 +41,7 @@ const DoctorSettings = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSaveProfile} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre completo</Label>
                 <Input id="name" defaultValue="Dra. María Elena Rodríguez" />
@@ -93,7 +89,7 @@ const DoctorSettings = () => {
             { key: "marketing" as const, label: "Novedades de SaludPe", desc: "Recibe información sobre nuevas funcionalidades" },
           ].map((item, i, arr) => (
             <div key={item.key}>
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium text-foreground">{item.label}</p>
                   <p className="text-xs text-muted-foreground">{item.desc}</p>
@@ -119,7 +115,7 @@ const DoctorSettings = () => {
           <CardDescription>Gestiona la seguridad de tu cuenta</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="current-password">Contraseña actual</Label>
               <Input id="current-password" type="password" placeholder="••••••••" />

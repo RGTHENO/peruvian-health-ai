@@ -33,7 +33,7 @@ const NotificationBell = () => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative h-11 w-11">
           <Bell className="h-5 w-5 text-muted-foreground" />
           {unreadCount > 0 && (
             <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
@@ -42,7 +42,7 @@ const NotificationBell = () => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent align="end" className="w-[calc(100vw-1rem)] max-w-80 p-0">
         <div className="flex items-center justify-between px-4 py-3">
           <p className="text-sm font-semibold text-foreground">Notificaciones</p>
           {unreadCount > 0 && (

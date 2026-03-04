@@ -188,14 +188,14 @@ const DoctorConsultation = () => {
   return (
     <div className="p-4 lg:p-6 space-y-4">
       {/* Top bar */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-10 gap-1">
           <ArrowLeft className="h-4 w-4" /> Volver a agenda
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5 lg:hidden"
+          className="h-10 gap-1.5 lg:hidden"
           onClick={() => setShowHistory(!showHistory)}
         >
           {showHistory ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
@@ -250,7 +250,7 @@ const DoctorConsultation = () => {
       </Card>
 
       {/* Split layout: Form (left) + History (right) */}
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+      <div className="flex flex-col items-start gap-4 lg:flex-row lg:gap-6">
         {/* LEFT — SOAP Form */}
         <div className={`w-full ${showHistory ? "lg:w-[60%]" : "lg:w-full"} space-y-4 transition-all`}>
           <Card>
@@ -263,7 +263,7 @@ const DoctorConsultation = () => {
               {/* Chief complaint */}
               <div className="space-y-2">
                 <Label>Motivo de consulta</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Input
                     value={chiefComplaint}
                     onChange={(e) => setChiefComplaint(e.target.value)}
@@ -276,7 +276,7 @@ const DoctorConsultation = () => {
               {/* Symptoms */}
               <div className="space-y-2">
                 <Label>Síntomas / Historia de enfermedad actual</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Textarea
                     value={symptoms}
                     onChange={(e) => setSymptoms(e.target.value)}
@@ -290,7 +290,7 @@ const DoctorConsultation = () => {
               {/* Physical exam */}
               <div className="space-y-2">
                 <Label>Examen físico</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Textarea
                     value={physicalExam}
                     onChange={(e) => setPhysicalExam(e.target.value)}
@@ -306,14 +306,14 @@ const DoctorConsultation = () => {
               {/* Diagnosis */}
               <div className="space-y-2">
                 <Label>Diagnóstico</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Input
                     value={diagnosis}
                     onChange={(e) => setDiagnosis(e.target.value)}
                     placeholder="Diagnóstico principal"
                   />
                   <Select value={diagnosisStatus} onValueChange={(v) => setDiagnosisStatus(v as "Activo" | "Resuelto")}>
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-full sm:w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -343,7 +343,7 @@ const DoctorConsultation = () => {
                     <Input placeholder="Dosis" className="sm:w-24" value={rx.dosage} onChange={(e) => updatePrescription(i, "dosage", e.target.value)} />
                     <Input placeholder="Frecuencia" className="sm:w-32" value={rx.frequency} onChange={(e) => updatePrescription(i, "frequency", e.target.value)} />
                     <Input placeholder="Duración" className="sm:w-24" value={rx.duration} onChange={(e) => updatePrescription(i, "duration", e.target.value)} />
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removePrescription(i)} disabled={prescriptions.length === 1}>
+                    <Button type="button" variant="ghost" size="icon" className="h-10 w-10 text-destructive" onClick={() => removePrescription(i)} disabled={prescriptions.length === 1}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -363,7 +363,7 @@ const DoctorConsultation = () => {
                 {recommendations.map((rec, i) => (
                   <div key={i} className="flex gap-2">
                     <Input placeholder="Indicación para el paciente" value={rec} onChange={(e) => updateRecommendation(i, e.target.value)} />
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeRecommendation(i)} disabled={recommendations.length === 1}>
+                    <Button type="button" variant="ghost" size="icon" className="h-10 w-10 text-destructive shrink-0" onClick={() => removeRecommendation(i)} disabled={recommendations.length === 1}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -386,7 +386,7 @@ const DoctorConsultation = () => {
                 {labOrders.map((order, i) => (
                   <div key={i} className="flex gap-2">
                     <Input placeholder="Nombre del examen (ej: Hemograma completo)" value={order.test} onChange={(e) => updateLabOrder(i, e.target.value)} />
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeLabOrder(i)}>
+                    <Button type="button" variant="ghost" size="icon" className="h-10 w-10 text-destructive shrink-0" onClick={() => removeLabOrder(i)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -410,16 +410,16 @@ const DoctorConsultation = () => {
                 {surgeryReferral ? (
                   <div className="space-y-2 p-3 rounded-lg border border-border">
                     <Input placeholder="Procedimiento quirúrgico" value={surgeryReferral.procedure} onChange={(e) => setSurgeryReferral({ ...surgeryReferral, procedure: e.target.value })} />
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Select value={surgeryReferral.urgency} onValueChange={(v) => setSurgeryReferral({ ...surgeryReferral, urgency: v as "Electiva" | "Urgente" })}>
-                        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Electiva">Electiva</SelectItem>
                           <SelectItem value="Urgente">Urgente</SelectItem>
                         </SelectContent>
                       </Select>
                       <Input placeholder="Notas" className="flex-1" value={surgeryReferral.notes} onChange={(e) => setSurgeryReferral({ ...surgeryReferral, notes: e.target.value })} />
-                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => setSurgeryReferral(null)}>
+                      <Button type="button" variant="ghost" size="icon" className="h-10 w-10 text-destructive shrink-0" onClick={() => setSurgeryReferral(null)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -434,7 +434,7 @@ const DoctorConsultation = () => {
               {/* Notes */}
               <div className="space-y-2">
                 <Label>Notas adicionales</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones, plan de seguimiento..." rows={3} />
                   <VoiceDictation onTranscript={appendTo(setNotes)} />
                 </div>
@@ -469,19 +469,19 @@ const DoctorConsultation = () => {
               </CardHeader>
               <CardContent className="p-0">
                 <Tabs defaultValue="consultas">
-                  <TabsList className="w-full rounded-none border-b bg-transparent px-4">
-                    <TabsTrigger value="consultas" className="text-xs gap-1 data-[state=active]:shadow-none">
+                  <TabsList className="w-full rounded-none border-b bg-transparent px-2 py-2 sm:px-4">
+                    <TabsTrigger value="consultas" className="flex-1 gap-1 text-xs data-[state=active]:shadow-none">
                       <Stethoscope className="h-3 w-3" /> Consultas ({prevConsultations.length})
                     </TabsTrigger>
-                    <TabsTrigger value="laboratorio" className="text-xs gap-1 data-[state=active]:shadow-none">
+                    <TabsTrigger value="laboratorio" className="flex-1 gap-1 text-xs data-[state=active]:shadow-none">
                       <FlaskConical className="h-3 w-3" /> Labs ({prevLabs.length})
                     </TabsTrigger>
-                    <TabsTrigger value="cirugias" className="text-xs gap-1 data-[state=active]:shadow-none">
+                    <TabsTrigger value="cirugias" className="flex-1 gap-1 text-xs data-[state=active]:shadow-none">
                       <Scissors className="h-3 w-3" /> Cirugías ({prevSurgeries.length})
                     </TabsTrigger>
                   </TabsList>
 
-                  <ScrollArea className="h-[calc(100vh-320px)] min-h-[400px]">
+                  <ScrollArea className="h-[50vh] min-h-[18rem] sm:h-[calc(100vh-320px)] sm:min-h-[400px]">
                     <div className="p-4">
                       <TabsContent value="consultas" className="mt-0 space-y-3">
                         {prevConsultations.length === 0 ? (

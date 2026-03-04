@@ -46,10 +46,10 @@ const DoctorDashboard = () => {
   return (
     <div className="p-4 lg:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground font-serif">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground font-serif">
           Buenos días, Dra. María Elena 👋
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
           Martes 3 de marzo, 2026 — Tienes {todayAppointments.length} citas programadas hoy
         </p>
       </div>
@@ -58,7 +58,7 @@ const DoctorDashboard = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <Card key={stat.label}>
-            <CardContent className="p-4 flex items-center gap-3">
+            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
               <div className={`p-2 rounded-lg bg-accent ${stat.color}`}>
                 <stat.icon className="h-5 w-5" />
               </div>
@@ -73,7 +73,7 @@ const DoctorDashboard = () => {
 
       {/* Upcoming appointments */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
+        <CardHeader className="flex flex-col items-start gap-2 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-lg">Próximas citas de hoy</CardTitle>
           <Link to="/doctor/portal/agenda">
             <Button variant="ghost" size="sm" className="gap-1">
@@ -90,9 +90,9 @@ const DoctorDashboard = () => {
             upcomingToday.map((apt) => (
               <div
                 key={apt.id}
-                className="flex items-center gap-4 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                className="flex flex-col gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:gap-4"
               >
-                <div className="text-center min-w-[60px]">
+                <div className="min-w-[60px] text-left sm:text-center">
                   <p className="text-lg font-bold text-foreground">{apt.time}</p>
                   <p className="text-xs text-muted-foreground">{apt.duration} min</p>
                 </div>
@@ -100,7 +100,7 @@ const DoctorDashboard = () => {
                   <p className="font-medium text-foreground truncate">{apt.patientName}</p>
                   <p className="text-sm text-muted-foreground truncate">{apt.reason}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {apt.type === "telemedicina" ? (
                     <Badge variant="outline" className="gap-1 text-xs">
                       <Video className="h-3 w-3" /> Virtual
@@ -114,7 +114,7 @@ const DoctorDashboard = () => {
                     {statusLabels[apt.status]}
                   </Badge>
                   <Link to={`/doctor/portal/consulta/${apt.id}`}>
-                    <Button size="sm" className="gap-1">
+                    <Button size="sm" className="h-9 gap-1">
                       <Stethoscope className="h-3 w-3" /> Atender
                     </Button>
                   </Link>
@@ -127,7 +127,7 @@ const DoctorDashboard = () => {
 
       {/* Recent patients */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
+        <CardHeader className="flex flex-col items-start gap-2 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-lg">Pacientes recientes</CardTitle>
           <Link to="/doctor/portal/pacientes">
             <Button variant="ghost" size="sm" className="gap-1">

@@ -66,7 +66,7 @@ const VoiceDictation = ({ onTranscript, disabled }: VoiceDictationProps) => {
           type="button"
           variant={isListening ? "destructive" : "outline"}
           size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-11 w-11 shrink-0"
           onClick={toggle}
           disabled={disabled}
         >

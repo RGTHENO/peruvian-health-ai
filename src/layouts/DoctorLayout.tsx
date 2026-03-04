@@ -17,12 +17,12 @@ const DoctorLayout = () => {
   return (
     <div className="flex min-h-screen bg-background">
       <DoctorSidebar />
-      <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-end gap-2 border-b border-border px-4 py-2 lg:px-6">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-end gap-2 border-b border-border px-3 py-2 sm:px-4 lg:px-6">
           <NotificationBell />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 px-2">
+              <Button variant="ghost" className="h-11 gap-2 px-2">
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
                   ME
                 </div>
@@ -54,7 +54,7 @@ const DoctorLayout = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex-1 pb-16 lg:pb-0">
+        <main className="flex-1 pb-24 lg:pb-0">
           <Outlet />
         </main>
       </div>

@@ -55,7 +55,7 @@ const DoctorAgenda = () => {
   return (
     <div className="p-4 lg:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground font-serif">Agenda</h1>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground font-serif">Agenda</h1>
         <p className="text-muted-foreground mt-1">Gestiona tu horario de consultas</p>
       </div>
 
@@ -74,19 +74,21 @@ const DoctorAgenda = () => {
 
         {/* Day view */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="icon"
+                className="h-11 w-11"
                 onClick={() => setSelectedDate((d) => subDays(d, 1))}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <h2 className="text-lg font-semibold text-foreground capitalize">{dateLabel}</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-foreground capitalize">{dateLabel}</h2>
               <Button
                 variant="outline"
                 size="icon"
+                className="h-11 w-11"
                 onClick={() => setSelectedDate((d) => addDays(d, 1))}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -104,16 +106,16 @@ const DoctorAgenda = () => {
                 return (
                   <div
                     key={slot}
-                    className={`flex items-stretch min-h-[72px] ${
+                    className={`flex min-h-[72px] flex-col sm:flex-row ${
                       apt ? `border-l-4 ${statusColors[apt.status]}` : ""
                     }`}
                   >
-                    <div className="w-20 flex-shrink-0 flex items-center justify-center border-r border-border">
+                    <div className="flex w-full flex-shrink-0 items-center justify-center border-b border-border py-2 sm:w-20 sm:border-b-0 sm:border-r sm:py-0">
                       <span className="text-sm font-mono text-muted-foreground">{slot}</span>
                     </div>
                     <div className="flex-1 p-3">
                       {apt ? (
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                           <div className="min-w-0">
                             <p className="font-medium text-foreground text-sm truncate">
                               {apt.patientName}
@@ -126,7 +128,7 @@ const DoctorAgenda = () => {
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex flex-wrap items-center gap-2">
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Clock className="h-3 w-3" />
                               {apt.duration}m
@@ -144,7 +146,7 @@ const DoctorAgenda = () => {
                             </Badge>
                             {apt.status !== "cancelada" && apt.status !== "completada" && (
                               <Link to={`/doctor/portal/consulta/${apt.id}`}>
-                                <Button size="sm" variant="default" className="gap-1 h-7 text-xs">
+                                <Button size="sm" variant="default" className="h-9 gap-1 text-xs">
                                   <Stethoscope className="h-3 w-3" /> Atender
                                 </Button>
                               </Link>

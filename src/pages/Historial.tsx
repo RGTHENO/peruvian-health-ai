@@ -60,7 +60,7 @@ const Historial = () => {
       <Navbar />
       <main className="flex-1 container py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold font-serif text-foreground">Mi Historial Médico</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold font-serif text-foreground">Mi Historial Médico</h1>
           <p className="text-muted-foreground mt-1">Expediente clínico digital con estándar FHIR</p>
         </div>
 

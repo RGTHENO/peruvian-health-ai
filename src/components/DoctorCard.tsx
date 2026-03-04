@@ -2,11 +2,12 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, Video, Building2 } from "lucide-react";
+import { Star, MapPin, Video, Building2, ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Doctor } from "@/data/doctors";
 
 const DoctorCard = ({ doctor }: { doctor: Doctor }) => {
+  const ctaLabel = doctor.available ? "Ver horarios" : "Ver perfil";
   const initials = doctor.name
     .split(" ")
     .filter((_, i) => i === 0 || i === 2)
@@ -16,20 +17,20 @@ const DoctorCard = ({ doctor }: { doctor: Doctor }) => {
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border-border">
       <CardContent className="p-5">
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row">
           <Avatar className="h-14 w-14 border-2 border-primary/20">
             <AvatarFallback className="bg-accent text-accent-foreground font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
               <div>
                 <h3 className="font-semibold text-foreground truncate">{doctor.name}</h3>
                 <p className="text-sm text-primary font-medium">{doctor.specialty}</p>
               </div>
               {doctor.available && (
-                <Badge variant="secondary" className="bg-accent text-accent-foreground shrink-0 text-xs">
+                <Badge variant="secondary" className="w-fit bg-accent text-accent-foreground text-xs">
                   Disponible
                 </Badge>
               )}
@@ -46,7 +47,7 @@ const DoctorCard = ({ doctor }: { doctor: Doctor }) => {
               </span>
             </div>
 
-            <div className="flex items-center gap-2 mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               {doctor.modality.includes("presencial") && (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Building2 className="h-3 w-3" /> Presencial
@@ -59,13 +60,19 @@ const DoctorCard = ({ doctor }: { doctor: Doctor }) => {
               )}
             </div>
 
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+            <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-lg font-bold text-foreground">
                 S/ {doctor.price}
               </span>
-              <Link to={`/doctor/${doctor.id}`}>
-                <Button size="sm">Ver Perfil y Agendar</Button>
-              </Link>
+              <Button asChild size="sm" className="h-10 w-full sm:w-auto">
+                <Link
+                  to={`/doctor/${doctor.id}`}
+                  aria-label={`${ctaLabel} de ${doctor.name}`}
+                >
+                  {ctaLabel}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

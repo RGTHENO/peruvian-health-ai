@@ -107,7 +107,7 @@ const DoctorPatientRecord = () => {
       <Button
         variant="ghost"
         size="sm"
-        className="gap-1.5 -ml-2"
+        className="h-10 gap-1.5 -ml-2"
         onClick={() => navigate("/doctor/portal/pacientes")}
       >
         <ArrowLeft className="h-4 w-4" /> Volver a pacientes
@@ -184,14 +184,14 @@ const DoctorPatientRecord = () => {
             </p>
             <div className="space-y-2">
               {upcomingAppointments.map((apt) => (
-                <div key={apt.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 text-sm">
+                <div key={apt.id} className="flex flex-col gap-2 rounded-lg bg-muted/40 p-2.5 text-sm sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-medium text-foreground">
                       {apt.date} — {apt.time}
                     </p>
                     <p className="text-xs text-muted-foreground">{apt.reason}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline" className="text-xs">
                       {apt.type === "telemedicina" ? "Virtual" : "Presencial"}
                     </Badge>

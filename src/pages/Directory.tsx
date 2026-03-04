@@ -36,7 +36,7 @@ const Directory = () => {
             <h1 className="text-3xl font-bold text-foreground font-serif mb-2">Directorio Médico</h1>
             <p className="text-muted-foreground">Encuentra al mejor especialista cerca de ti</p>
 
-            <div className="grid gap-3 mt-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 mt-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -78,7 +78,7 @@ const Directory = () => {
 
         <div className="container py-8">
           <p className="text-sm text-muted-foreground mb-4">{filtered.length} médicos encontrados</p>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((d) => (
               <DoctorCard key={d.id} doctor={d} />
             ))}

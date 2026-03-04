@@ -60,22 +60,22 @@ const DoctorProfile = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 container py-8">
+      <main className="flex-1 container py-6 sm:py-8">
         <Link to="/directorio" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors">
           <ArrowLeft className="h-4 w-4" /> Volver al directorio
         </Link>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Profile info */}
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardContent className="p-6">
-                <div className="flex gap-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:gap-5">
                   <Avatar className="h-20 w-20 border-2 border-primary/20">
                     <AvatarFallback className="bg-accent text-accent-foreground text-xl font-semibold">{initials}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <h1 className="text-2xl font-bold text-foreground font-serif">{doctor.name}</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-foreground font-serif">{doctor.name}</h1>
                     <p className="text-primary font-medium">{doctor.specialty}</p>
                     <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1"><Star className="h-4 w-4 text-primary fill-primary" /> {doctor.rating} ({doctor.reviews} reseñas)</span>
@@ -100,7 +100,7 @@ const DoctorProfile = () => {
               <CardContent><p className="text-muted-foreground leading-relaxed">{doctor.bio}</p></CardContent>
             </Card>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Card>
                 <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Seguros Aceptados</CardTitle></CardHeader>
                 <CardContent className="flex flex-wrap gap-2">
@@ -122,7 +122,7 @@ const DoctorProfile = () => {
 
           {/* Booking sidebar */}
           <div>
-            <Card className="sticky top-24">
+            <Card className="lg:sticky lg:top-24">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Calendar className="h-5 w-5 text-primary" /> Reservar Cita
@@ -143,7 +143,7 @@ const DoctorProfile = () => {
                         variant={selectedSlot === slot ? "default" : "outline"}
                         size="sm"
                         onClick={() => setSelectedSlot(slot)}
-                        className="text-xs"
+                        className="h-10 text-xs"
                       >
                         {slot}
                       </Button>
