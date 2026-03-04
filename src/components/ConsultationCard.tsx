@@ -1,12 +1,13 @@
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Stethoscope, Pill, ClipboardList, FlaskConical, FileText, Share2, StickyNote } from "lucide-react";
+import { Stethoscope, Pill, ClipboardList, FlaskConical, FileText, Share2, StickyNote, ChevronDown } from "lucide-react";
 import type { ConsultationEncounter } from "@/data/encounters";
 
 interface Props {
   encounter: ConsultationEncounter;
+  defaultOpen?: boolean;
 }
 
 const SectionHeader = ({ icon: Icon, label, count }: { icon: React.ElementType; label: string; count?: number }) => (
@@ -18,25 +19,35 @@ const SectionHeader = ({ icon: Icon, label, count }: { icon: React.ElementType; 
   </div>
 );
 
-const ConsultationCard = ({ encounter }: Props) => {
+const ConsultationCard = ({ encounter, defaultOpen = false }: Props) => {
   return (
-    <Card>
-      <CardContent className="p-5 space-y-4">
-        {/* Diagnosis */}
-        <div>
-          <SectionHeader icon={Stethoscope} label="Diagnóstico" />
-          <div className="flex items-center gap-2 flex-wrap ml-6">
-            <span className="text-sm text-foreground">{encounter.diagnosis}</span>
-            <Badge variant={encounter.diagnosisStatus === "Activo" ? "default" : "secondary"} className="text-xs">
-              {encounter.diagnosisStatus}
-            </Badge>
+    <Collapsible defaultOpen={defaultOpen} className="rounded-lg border bg-card text-card-foreground shadow-sm">
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 text-left hover:bg-muted/50 transition-colors rounded-lg group">
+        <div className="flex items-center gap-3 min-w-0">
+          <Stethoscope className="h-4 w-4 text-primary shrink-0" />
+          <div className="min-w-0">
+            <span className="text-sm font-medium text-foreground">{encounter.diagnosis}</span>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              <Badge variant={encounter.diagnosisStatus === "Activo" ? "default" : "secondary"} className="text-xs">
+                {encounter.diagnosisStatus}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {encounter.prescriptions.length} medicamento{encounter.prescriptions.length !== 1 ? "s" : ""}
+                {encounter.recommendations.length > 0 && ` · ${encounter.recommendations.length} indicacion${encounter.recommendations.length !== 1 ? "es" : ""}`}
+                {encounter.labOrders.length > 0 && ` · ${encounter.labOrders.length} examen${encounter.labOrders.length !== 1 ? "es" : ""}`}
+              </span>
+            </div>
           </div>
         </div>
+        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
 
-        {/* Prescriptions */}
-        {encounter.prescriptions.length > 0 && (
-          <>
-            <Separator />
+      <CollapsibleContent>
+        <div className="px-5 pb-5 space-y-4">
+          <Separator />
+
+          {/* Prescriptions */}
+          {encounter.prescriptions.length > 0 && (
             <div>
               <SectionHeader icon={Pill} label="Medicamentos" count={encounter.prescriptions.length} />
               <div className="ml-6 space-y-1.5">
@@ -48,66 +59,67 @@ const ConsultationCard = ({ encounter }: Props) => {
                 ))}
               </div>
             </div>
-          </>
-        )}
+          )}
 
-        {/* Recommendations */}
-        {encounter.recommendations.length > 0 && (
-          <>
-            <Separator />
-            <div>
-              <SectionHeader icon={ClipboardList} label="Indicaciones" count={encounter.recommendations.length} />
-              <ul className="ml-6 space-y-1">
-                {encounter.recommendations.map((rec, j) => (
-                  <li key={j} className="text-sm text-foreground flex items-start gap-2">
-                    <span className="text-muted-foreground mt-1.5 h-1 w-1 rounded-full bg-muted-foreground shrink-0" />
-                    {rec}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </>
-        )}
+          {/* Recommendations */}
+          {encounter.recommendations.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <SectionHeader icon={ClipboardList} label="Indicaciones" count={encounter.recommendations.length} />
+                <ul className="ml-6 space-y-1">
+                  {encounter.recommendations.map((rec, j) => (
+                    <li key={j} className="text-sm text-foreground flex items-start gap-2">
+                      <span className="text-muted-foreground mt-1.5 h-1 w-1 rounded-full bg-muted-foreground shrink-0" />
+                      {rec}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
 
-        {/* Lab Orders */}
-        {encounter.labOrders.length > 0 && (
-          <>
-            <Separator />
-            <div>
-              <SectionHeader icon={FlaskConical} label="Exámenes solicitados" count={encounter.labOrders.length} />
-              <ul className="ml-6 space-y-1">
-                {encounter.labOrders.map((order, j) => (
-                  <li key={j} className="text-sm text-foreground flex items-start gap-2">
-                    <span className="text-muted-foreground mt-1.5 h-1 w-1 rounded-full bg-muted-foreground shrink-0" />
-                    {order}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </>
-        )}
+          {/* Lab Orders */}
+          {encounter.labOrders.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <SectionHeader icon={FlaskConical} label="Exámenes solicitados" count={encounter.labOrders.length} />
+                <ul className="ml-6 space-y-1">
+                  {encounter.labOrders.map((order, j) => (
+                    <li key={j} className="text-sm text-foreground flex items-start gap-2">
+                      <span className="text-muted-foreground mt-1.5 h-1 w-1 rounded-full bg-muted-foreground shrink-0" />
+                      {order}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
 
-        {/* Notes */}
-        {encounter.notes && (
-          <>
-            <Separator />
-            <div className="flex items-start gap-2 ml-0">
-              <StickyNote className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <p className="text-sm text-muted-foreground">{encounter.notes}</p>
-            </div>
-          </>
-        )}
-      </CardContent>
+          {/* Notes */}
+          {encounter.notes && (
+            <>
+              <Separator />
+              <div className="flex items-start gap-2">
+                <StickyNote className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <p className="text-sm text-muted-foreground">{encounter.notes}</p>
+              </div>
+            </>
+          )}
 
-      <CardFooter className="px-5 pb-4 pt-0 gap-2">
-        <Button variant="outline" size="sm" disabled className="gap-1.5">
-          <FileText className="h-3.5 w-3.5" /> Descargar PDF
-        </Button>
-        <Button variant="outline" size="sm" disabled className="gap-1.5">
-          <Share2 className="h-3.5 w-3.5" /> Compartir
-        </Button>
-      </CardFooter>
-    </Card>
+          {/* Actions */}
+          <div className="flex gap-2 pt-1">
+            <Button variant="outline" size="sm" disabled className="gap-1.5">
+              <FileText className="h-3.5 w-3.5" /> Descargar PDF
+            </Button>
+            <Button variant="outline" size="sm" disabled className="gap-1.5">
+              <Share2 className="h-3.5 w-3.5" /> Compartir
+            </Button>
+          </div>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };
 
