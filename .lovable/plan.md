@@ -1,83 +1,87 @@
 
 
-## Problem
+## Plan: Clinical Consultation Page with Voice Dictation
 
-The doctor clicks a patient card and sees a small dialog with only basic contact info and a list of appointment dates. This is almost useless clinically. A doctor needs to see the patient's **full medical history** (consultations, labs, surgeries, prescriptions) to make informed decisions during a visit.
+### What We're Building
 
-Currently, the rich clinical data (encounters from `encounters.ts`) exists and is beautifully rendered in the patient-facing `/historial` page, but is completely disconnected from the doctor portal.
+A full consultation workspace where doctors document encounters during patient visits, with voice dictation support and insurance visibility.
 
-## Solution: Dedicated Patient Record Page
+### Key Pages & Components
 
-Instead of a dialog, clicking a patient card navigates to a **full-page patient record** at `/doctor/portal/pacientes/:patientId`. This page becomes the doctor's primary clinical tool.
+#### 1. `src/pages/DoctorConsultation.tsx` (NEW)
 
-### Page Structure
+Route: `/doctor/portal/consulta/:appointmentId`
+
+Layout:
 
 ```text
 ┌──────────────────────────────────────────────────────┐
-│  ← Volver a pacientes                               │
+│  ← Volver a agenda                                   │
 │                                                      │
-│  ┌─────────────────────────────────────────────────┐ │
-│  │ 👤 Juan Pérez Sánchez                           │ │
-│  │ 45 años · Masculino · Rímac · +51 987 654 321  │ │
-│  │ [Hipertensión] [Diabetes tipo 2]                │ │
-│  │                                                 │ │
-│  │ Alergias: Penicilina    Sangre: O+              │ │
+│  ┌─ Patient Summary Bar ───────────────────────────┐ │
+│  │ Juan Pérez · 45 años · M · O+ · Rímac (Seguro) │ │
+│  │ ⚠ Alergias: Penicilina                          │ │
+│  │ Condiciones: [Hipertensión] [Diabetes tipo 2]   │ │
 │  └─────────────────────────────────────────────────┘ │
 │                                                      │
-│  [Consultas] [Cirugías] [Recetas] [Laboratorio]      │
-│                                                      │
-│  (Same timeline + cards as /historial, reusing       │
-│   ConsultationCard, LabCard, SurgeryCard,            │
-│   PrescriptionCard components)                       │
-│                                                      │
-│  ┌─────────────────────────────────────────────────┐ │
-│  │ 📅 Próximas citas                               │ │
-│  │ 2026-03-04 09:00 — Resultados de laboratorio    │ │
+│  ┌─ SOAP Form ─────────────────────────────────────┐ │
+│  │  Motivo de consulta  [🎤] _______________       │ │
+│  │  Síntomas            [🎤] _______________       │ │
+│  │  Examen físico       [🎤] _______________       │ │
+│  │  Diagnóstico         [🎤] _______________       │ │
+│  │  Estado: [Activo ▾]                              │ │
+│  │                                                  │ │
+│  │  ── Recetas ──                                   │ │
+│  │  [+ Agregar medicamento]                         │ │
+│  │  Medicamento | Dosis | Frecuencia | Duración     │ │
+│  │                                                  │ │
+│  │  ── Indicaciones ──                              │ │
+│  │  [+ Agregar indicación]                          │ │
+│  │                                                  │ │
+│  │  ── Órdenes ──                                   │ │
+│  │  [+ Orden de laboratorio]                        │ │
+│  │  [+ Referencia a cirugía]                        │ │
+│  │                                                  │ │
+│  │  Notas adicionales   [🎤] _______________       │ │
+│  │                                                  │ │
+│  │  [Guardar consulta]                              │ │
 │  └─────────────────────────────────────────────────┘ │
+│                                                      │
+│  ▸ Historial previo (colapsable, últimas consultas)  │
 └──────────────────────────────────────────────────────┘
 ```
 
-### Why a full page instead of a bigger dialog
+Key detail: The **patient summary bar** prominently shows insurance type (e.g., "Rímac", "SIS", "Pacífico") with a badge, plus blood type and allergies as clinical alerts. This is critical for doctors to know coverage before prescribing.
 
-- Dialogs constrain vertical space; medical records are inherently long
-- A dedicated route is bookmarkable, shareable between doctors
-- The doctor can focus entirely on one patient without the grid behind
-- Mobile: a dialog would be nearly full-screen anyway; a page is cleaner
+#### 2. `src/components/VoiceDictation.tsx` (NEW)
 
-## Implementation Plan
+Reusable microphone button using the **Web Speech API** (`SpeechRecognition`). Each text field gets one. Tap to start, tap to stop, text appends to the field. Works in Chrome/Edge. Shows a graceful fallback message in unsupported browsers.
 
-### 1. Extend Patient data model (`src/data/appointments.ts`)
+#### 3. Entry Points — "Atender" Buttons
 
-Add clinical fields to `Patient`: `bloodType`, `allergies`, `emergencyContact`. Link patients to encounters by adding a `patientId` field to existing mock encounters in `encounters.ts`.
+- **`src/pages/DoctorDashboard.tsx`**: Add "Atender" button next to each active appointment in the today's list, linking to `/doctor/portal/consulta/:appointmentId`
+- **`src/pages/DoctorAgenda.tsx`**: Add "Atender" button on each non-cancelled/non-completed appointment slot
 
-### 2. Create patient record page (`src/pages/DoctorPatientRecord.tsx`)
+#### 4. Route — `src/App.tsx`
 
-- **Header**: Patient summary card (name, age, gender, insurance, phone, email, conditions, allergies, blood type)
-- **Tabs**: Reuse the same `Tabs` structure from `Historial.tsx` with the 4 tabs (Consultas, Cirugías, Recetas, Laboratorio), rendering the same card components (`ConsultationCard`, `LabCard`, `SurgeryCard`, `PrescriptionCard`)
-- **Sidebar section**: Upcoming appointments for this patient
-- Filter encounters by `patientId`
+Add `consulta/:appointmentId` under the doctor layout.
 
-### 3. Add route (`src/App.tsx`)
+#### 5. Data Flow — `src/data/encounters.ts`
 
-Add nested route: `pacientes/:patientId` under the doctor layout, rendering `DoctorPatientRecord`.
+Add a helper function `addEncounter()` that pushes a new encounter to the mock array. When the doctor saves:
+- Creates a `ConsultationEncounter` with `patientId` from the appointment
+- Optionally creates pending lab/surgery orders
+- Marks appointment status as `completada`
+- New records appear immediately in both doctor's patient record and patient's history
 
-### 4. Update patient list (`src/pages/DoctorPatients.tsx`)
-
-- Replace `onClick → setSelectedPatient` with `navigate(/doctor/portal/pacientes/${patient.id})`
-- Remove the Dialog entirely
-- Keep the search and grid as-is
-
-### 5. Update encounters data (`src/data/encounters.ts`)
-
-Add `patientId` to each encounter interface and mock data so records can be filtered per patient. Distribute existing encounters across patients (e.g., Juan gets the hypertension consultation and cholesterol labs, Roberto gets the cardiac encounters, etc.).
-
-### Summary of files changed
+### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/data/appointments.ts` | Add `bloodType`, `allergies`, `emergencyContact` to Patient |
-| `src/data/encounters.ts` | Add `patientId` to all encounter types and mock data |
-| `src/pages/DoctorPatientRecord.tsx` | **New** — full patient record page |
-| `src/pages/DoctorPatients.tsx` | Replace dialog with navigation |
-| `src/App.tsx` | Add route `pacientes/:patientId` |
+| `src/pages/DoctorConsultation.tsx` | **New** — SOAP form with patient summary (including insurance) + voice |
+| `src/components/VoiceDictation.tsx` | **New** — Mic button using Web Speech API |
+| `src/pages/DoctorDashboard.tsx` | Add "Atender" button to appointment cards |
+| `src/pages/DoctorAgenda.tsx` | Add "Atender" button to time slots |
+| `src/App.tsx` | Add route `consulta/:appointmentId` |
+| `src/data/encounters.ts` | Add `addEncounter` helper for saving new records |
 
