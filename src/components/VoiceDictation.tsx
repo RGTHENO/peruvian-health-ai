@@ -8,15 +8,48 @@ interface VoiceDictationProps {
   disabled?: boolean;
 }
 
-interface SpeechRecognitionEvent {
-  results: SpeechRecognitionResultList;
+interface VoiceRecognitionAlternative {
+  transcript: string;
+}
+
+interface VoiceRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  [index: number]: VoiceRecognitionAlternative;
+}
+
+interface VoiceRecognitionResultList {
+  length: number;
+  [index: number]: VoiceRecognitionResult;
+}
+
+interface VoiceRecognitionEvent {
+  results: VoiceRecognitionResultList;
   resultIndex: number;
+}
+
+interface VoiceRecognitionInstance {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: VoiceRecognitionEvent) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+interface VoiceRecognitionWindow extends Window {
+  SpeechRecognition?: new () => VoiceRecognitionInstance;
+  webkitSpeechRecognition?: new () => VoiceRecognitionInstance;
 }
 
 const VoiceDictation = ({ onTranscript, disabled }: VoiceDictationProps) => {
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
-  const supported = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
+  const recognitionRef = useRef<VoiceRecognitionInstance | null>(null);
+  const supported =
+    typeof window !== "undefined" &&
+    ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
   useEffect(() => {
     return () => {
@@ -33,13 +66,17 @@ const VoiceDictation = ({ onTranscript, disabled }: VoiceDictationProps) => {
       return;
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognitionWindow = window as VoiceRecognitionWindow;
+    const SpeechRecognition =
+      recognitionWindow.SpeechRecognition || recognitionWindow.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
     const recognition = new SpeechRecognition();
     recognition.lang = "es-PE";
     recognition.continuous = true;
     recognition.interimResults = false;
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: VoiceRecognitionEvent) => {
       let transcript = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
@@ -67,6 +104,7 @@ const VoiceDictation = ({ onTranscript, disabled }: VoiceDictationProps) => {
           variant={isListening ? "destructive" : "outline"}
           size="icon"
           className="h-11 w-11 shrink-0"
+          aria-label={isListening ? "Detener dictado por voz" : "Iniciar dictado por voz"}
           onClick={toggle}
           disabled={disabled}
         >

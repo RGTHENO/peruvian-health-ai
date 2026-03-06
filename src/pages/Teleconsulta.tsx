@@ -16,7 +16,7 @@ const Teleconsulta = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1">
         {/* Hero */}
         <section className="bg-primary py-12 sm:py-16">
           <div className="container text-center">
@@ -26,11 +26,9 @@ const Teleconsulta = () => {
               Consulta con los mejores especialistas del Perú desde la comodidad de tu hogar. 
               Atención médica de calidad, sin filas ni desplazamientos.
             </p>
-            <Link to="/directorio?modalidad=telemedicina" className="inline-block mt-8">
-              <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                Ver médicos con telemedicina
-              </Button>
-            </Link>
+            <Button asChild size="lg" variant="secondary" className="mt-8 w-full sm:w-auto">
+              <Link to="/directorio?modalidad=telemedicina">Ver médicos con telemedicina</Link>
+            </Button>
           </div>
         </section>
 

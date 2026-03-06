@@ -1,13 +1,13 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Video, MapPin, ChevronLeft, ChevronRight, Clock, FileText, Stethoscope } from "lucide-react";
 import { Link } from "react-router-dom";
-import { appointments } from "@/data/appointments";
 import { format, addDays, subDays } from "date-fns";
 import { es } from "date-fns/locale";
+import { getPreferredAppointmentDate, toAppointmentDate, useAppointments } from "@/lib/appointments-store";
 
 const statusColors: Record<string, string> = {
   confirmada: "border-l-primary bg-primary/5",
@@ -37,17 +37,31 @@ const timeSlots = [
 ];
 
 const DoctorAgenda = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date("2026-03-03"));
+  const appointmentList = useAppointments();
+  const fallbackDate = useMemo(
+    () => toAppointmentDate(getPreferredAppointmentDate(appointmentList)),
+    [appointmentList],
+  );
+  const [selectedDate, setSelectedDate] = useState<Date>(fallbackDate);
+
+  useEffect(() => {
+    const selectedDateKey = format(selectedDate, "yyyy-MM-dd");
+    const hasSelectedDate = appointmentList.some((appointment) => appointment.date === selectedDateKey);
+
+    if (!hasSelectedDate) {
+      setSelectedDate(fallbackDate);
+    }
+  }, [appointmentList, fallbackDate, selectedDate]);
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const dateLabel = format(selectedDate, "EEEE d 'de' MMMM, yyyy", { locale: es });
 
   const dayAppointments = useMemo(
     () =>
-      appointments
+      appointmentList
         .filter((a) => a.date === dateStr)
         .sort((a, b) => a.time.localeCompare(b.time)),
-    [dateStr]
+    [appointmentList, dateStr]
   );
 
   const occupiedSlots = new Set(dayAppointments.map((a) => a.time));
@@ -80,6 +94,7 @@ const DoctorAgenda = () => {
                 variant="outline"
                 size="icon"
                 className="h-11 w-11"
+                aria-label="Ver día anterior"
                 onClick={() => setSelectedDate((d) => subDays(d, 1))}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -89,6 +104,7 @@ const DoctorAgenda = () => {
                 variant="outline"
                 size="icon"
                 className="h-11 w-11"
+                aria-label="Ver día siguiente"
                 onClick={() => setSelectedDate((d) => addDays(d, 1))}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -145,11 +161,11 @@ const DoctorAgenda = () => {
                               {statusLabels[apt.status]}
                             </Badge>
                             {apt.status !== "cancelada" && apt.status !== "completada" && (
-                              <Link to={`/doctor/portal/consulta/${apt.id}`}>
-                                <Button size="sm" variant="default" className="h-9 gap-1 text-xs">
+                              <Button asChild size="sm" variant="default" className="h-9 gap-1 text-xs">
+                                <Link to={`/doctor/portal/consulta/${apt.id}`}>
                                   <Stethoscope className="h-3 w-3" /> Atender
-                                </Button>
-                              </Link>
+                                </Link>
+                              </Button>
                             )}
                           </div>
                         </div>

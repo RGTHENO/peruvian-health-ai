@@ -60,7 +60,7 @@ const DoctorProfile = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 container py-6 sm:py-8">
+      <main id="main-content" tabIndex={-1} className="flex-1 container py-6 sm:py-8">
         <Link to="/directorio" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors">
           <ArrowLeft className="h-4 w-4" /> Volver al directorio
         </Link>

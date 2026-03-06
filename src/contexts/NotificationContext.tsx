@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { AppNotification, mockNotifications, notificationTypeToPreference } from "@/data/notifications";
 
 export interface NotificationPreferences {
@@ -55,10 +55,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [notifications, preferences]
   );
 
-  const unreadCount = useMemo(
-    () => filteredNotifications.filter((n) => !n.read).length,
-    [filteredNotifications]
-  );
+  const unreadCount = filteredNotifications.filter((notification) => !notification.read).length;
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));

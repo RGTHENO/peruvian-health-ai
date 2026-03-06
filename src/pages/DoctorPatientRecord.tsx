@@ -19,24 +19,37 @@ import {
   Search,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { patients, appointments } from "@/data/appointments";
-import { mockEncounters } from "@/data/encounters";
-import type { ConsultationEncounter, LabEncounter, SurgeryEncounter } from "@/data/encounters";
+import { patients } from "@/data/appointments";
+import type { ConsultationEncounter, Encounter, LabEncounter, SurgeryEncounter } from "@/data/encounters";
 import ConsultationCard from "@/components/ConsultationCard";
 import LabCard from "@/components/LabCard";
 import PrescriptionCard from "@/components/PrescriptionCard";
 import SurgeryCard from "@/components/SurgeryCard";
+import { useAppointments } from "@/lib/appointments-store";
+import { useEncounters } from "@/lib/encounters-store";
+
+const getEncounterKey = (encounter: Encounter, index: number) => {
+  const label = encounter.type === "consultation"
+    ? encounter.doctor
+    : encounter.type === "lab"
+      ? encounter.lab
+      : encounter.surgeon;
+
+  return `${encounter.type}-${encounter.patientId}-${encounter.date}-${label}-${index}`;
+};
 
 const DoctorPatientRecord = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const appointmentList = useAppointments();
+  const encounterList = useEncounters();
 
   const patient = useMemo(() => patients.find((p) => p.id === patientId), [patientId]);
 
   const allEncounters = useMemo(
-    () => mockEncounters.filter((e) => e.patientId === patientId),
-    [patientId]
+    () => encounterList.filter((e) => e.patientId === patientId),
+    [encounterList, patientId]
   );
 
   const encounters = useMemo(() => {
@@ -71,10 +84,10 @@ const DoctorPatientRecord = () => {
 
   const upcomingAppointments = useMemo(
     () =>
-      appointments
+      appointmentList
         .filter((a) => a.patientId === patientId && a.status !== "completada" && a.status !== "cancelada")
         .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)),
-    [patientId]
+    [appointmentList, patientId]
   );
 
   const consultations = encounters.filter((e): e is ConsultationEncounter => e.type === "consultation");
@@ -210,7 +223,11 @@ const DoctorPatientRecord = () => {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por diagnóstico, medicamento, doctor..."
+          name="patient_record_search"
+          type="search"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Buscar por diagnóstico, medicamento o doctor…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -241,7 +258,7 @@ const DoctorPatientRecord = () => {
             <div className="relative space-y-0">
               <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-border" />
               {consultations.map((e, i) => (
-                <div key={i} className="relative pl-10 pb-8 last:pb-0">
+                <div key={getEncounterKey(e, i)} className="relative pl-10 pb-8 last:pb-0">
                   <div className="absolute left-[9px] top-1.5 h-3 w-3 rounded-full border-2 border-primary bg-background z-10" />
                   <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
                     <Calendar className="h-3 w-3" />
@@ -261,7 +278,7 @@ const DoctorPatientRecord = () => {
           ) : (
             <div className="space-y-4">
               {surgeries.map((e, i) => (
-                <div key={i}>
+                <div key={getEncounterKey(e, i)}>
                   <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
                     <Calendar className="h-3 w-3" />
                     {e.date} · <span className="font-medium text-foreground">{e.surgeon}</span>
@@ -275,13 +292,13 @@ const DoctorPatientRecord = () => {
         </TabsContent>
 
         <TabsContent value="recetas">
-          {prescriptionEncounters.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">Sin recetas registradas</p>
-          ) : (
-            <div className="space-y-4">
-              {prescriptionEncounters.map((e, i) =>
-                e.type === "consultation" ? (
-                  <div key={i}>
+              {prescriptionEncounters.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-8 text-center">Sin recetas registradas</p>
+              ) : (
+                <div className="space-y-4">
+                  {prescriptionEncounters.map((e, i) =>
+                    e.type === "consultation" ? (
+                      <div key={getEncounterKey(e, i)}>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
                       <Calendar className="h-3 w-3" />
                       {e.date} · <span className="font-medium text-foreground">{e.doctor}</span>
@@ -301,7 +318,7 @@ const DoctorPatientRecord = () => {
           ) : (
             <div className="space-y-4">
               {labs.map((e, i) => (
-                <div key={i}>
+                <div key={getEncounterKey(e, i)}>
                   <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
                     <Calendar className="h-3 w-3" />
                     {e.date} · <span className="font-medium text-foreground">{e.lab}</span>

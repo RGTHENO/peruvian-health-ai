@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Users, Clock, CheckCircle, XCircle, Video, MapPin, ArrowRight, Stethoscope } from "lucide-react";
-import { appointments, patients } from "@/data/appointments";
+import { CalendarDays, Users, Clock, CheckCircle, Video, MapPin, ArrowRight, Stethoscope } from "lucide-react";
+import { patients } from "@/data/appointments";
+import { getPreferredAppointmentDate, toAppointmentDate, useAppointments } from "@/lib/appointments-store";
 
 const statusColors: Record<string, string> = {
   confirmada: "bg-primary/10 text-primary border-primary/20",
@@ -21,11 +22,22 @@ const statusLabels: Record<string, string> = {
 };
 
 const DoctorDashboard = () => {
-  const todayStr = "2026-03-03";
+  const appointmentList = useAppointments();
+  const activeDate = useMemo(() => getPreferredAppointmentDate(appointmentList), [appointmentList]);
+  const activeDateLabel = useMemo(() => {
+    const formattedDate = new Intl.DateTimeFormat("es-PE", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(toAppointmentDate(activeDate));
+
+    return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+  }, [activeDate]);
 
   const todayAppointments = useMemo(
-    () => appointments.filter((a) => a.date === todayStr),
-    []
+    () => appointmentList.filter((appointment) => appointment.date === activeDate),
+    [activeDate, appointmentList]
   );
 
   const confirmed = todayAppointments.filter((a) => a.status === "confirmada").length;
@@ -50,7 +62,7 @@ const DoctorDashboard = () => {
           Buenos días, Dra. María Elena 👋
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          Martes 3 de marzo, 2026 — Tienes {todayAppointments.length} citas programadas hoy
+          {activeDateLabel} · Tienes {todayAppointments.length} citas programadas
         </p>
       </div>
 
@@ -75,11 +87,11 @@ const DoctorDashboard = () => {
       <Card>
         <CardHeader className="flex flex-col items-start gap-2 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-lg">Próximas citas de hoy</CardTitle>
-          <Link to="/doctor/portal/agenda">
-            <Button variant="ghost" size="sm" className="gap-1">
+          <Button asChild variant="ghost" size="sm" className="gap-1">
+            <Link to="/doctor/portal/agenda">
               Ver agenda <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3">
           {upcomingToday.length === 0 ? (
@@ -113,11 +125,11 @@ const DoctorDashboard = () => {
                   <Badge variant="outline" className={`text-xs ${statusColors[apt.status]}`}>
                     {statusLabels[apt.status]}
                   </Badge>
-                  <Link to={`/doctor/portal/consulta/${apt.id}`}>
-                    <Button size="sm" className="h-9 gap-1">
+                  <Button asChild size="sm" className="h-9 gap-1">
+                    <Link to={`/doctor/portal/consulta/${apt.id}`}>
                       <Stethoscope className="h-3 w-3" /> Atender
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </div>
             ))
@@ -129,11 +141,11 @@ const DoctorDashboard = () => {
       <Card>
         <CardHeader className="flex flex-col items-start gap-2 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-lg">Pacientes recientes</CardTitle>
-          <Link to="/doctor/portal/pacientes">
-            <Button variant="ghost" size="sm" className="gap-1">
+          <Button asChild variant="ghost" size="sm" className="gap-1">
+            <Link to="/doctor/portal/pacientes">
               Ver todos <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

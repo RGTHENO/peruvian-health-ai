@@ -54,7 +54,7 @@ const DoctorLayout = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex-1 pb-24 lg:pb-0">
+        <main id="main-content" tabIndex={-1} className="flex-1 pb-24 lg:pb-0">
           <Outlet />
         </main>
       </div>

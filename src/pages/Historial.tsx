@@ -7,21 +7,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Stethoscope, Pill, FlaskConical, Calendar, ClipboardList, Search, Scissors } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
-import { mockEncounters } from "@/data/encounters";
 import type { Encounter, ConsultationEncounter, LabEncounter, SurgeryEncounter } from "@/data/encounters";
 import ConsultationCard from "@/components/ConsultationCard";
 import LabCard from "@/components/LabCard";
 import PrescriptionCard from "@/components/PrescriptionCard";
 import SurgeryCard from "@/components/SurgeryCard";
+import { useEncounters } from "@/lib/encounters-store";
+
+const getEncounterKey = (encounter: Encounter, index: number) => {
+  const label = encounter.type === "consultation"
+    ? encounter.doctor
+    : encounter.type === "lab"
+      ? encounter.lab
+      : encounter.surgeon;
+
+  return `${encounter.type}-${encounter.patientId}-${encounter.date}-${label}-${index}`;
+};
 
 const Historial = () => {
   const revealRef = useScrollReveal();
   const [search, setSearch] = useState("");
+  const encounterList = useEncounters();
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return mockEncounters;
+    if (!search.trim()) return encounterList;
     const q = search.toLowerCase();
-    return mockEncounters.filter((e) => {
+    return encounterList.filter((e) => {
       if (e.type === "consultation") {
         return (
           e.diagnosis.toLowerCase().includes(q) ||
@@ -47,7 +58,7 @@ const Historial = () => {
         e.postOpDiagnosis.toLowerCase().includes(q)
       );
     });
-  }, [search]);
+  }, [encounterList, search]);
 
   const getTimelineLabel = (e: Encounter) => {
     if (e.type === "consultation") return e.doctor;
@@ -58,7 +69,7 @@ const Historial = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 container py-8">
+      <main id="main-content" tabIndex={-1} className="flex-1 container py-8">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold font-serif text-foreground">Mi Historial Médico</h1>
           <p className="text-muted-foreground mt-1">Expediente clínico digital con estándar FHIR</p>
@@ -102,7 +113,11 @@ const Historial = () => {
               <div className="relative mb-6">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por diagnóstico, medicamento, doctor..."
+                  name="timeline_search"
+                  type="search"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="Buscar por diagnóstico, medicamento o doctor…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
@@ -117,7 +132,7 @@ const Historial = () => {
                 )}
 
                 {filtered.map((encounter, i) => (
-                  <div key={i} className="relative pl-10 pb-8 last:pb-0">
+                  <div key={getEncounterKey(encounter, i)} className="relative pl-10 pb-8 last:pb-0">
                     <div className="absolute left-[9px] top-1.5 h-3 w-3 rounded-full border-2 border-primary bg-background z-10" />
 
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
@@ -149,10 +164,10 @@ const Historial = () => {
             {/* Cirugías Tab */}
             <TabsContent value="cirugias">
               <div className="space-y-4">
-                {mockEncounters
+                {encounterList
                   .filter((e): e is SurgeryEncounter => e.type === "surgery")
                   .map((encounter, i) => (
-                    <SurgeryCard key={i} encounter={encounter} defaultOpen={i === 0} />
+                    <SurgeryCard key={getEncounterKey(encounter, i)} encounter={encounter} defaultOpen={i === 0} />
                   ))}
               </div>
             </TabsContent>
@@ -160,10 +175,10 @@ const Historial = () => {
             {/* Recetas Tab */}
             <TabsContent value="recetas">
               <div className="space-y-4">
-                {mockEncounters
+                {encounterList
                   .filter((e): e is ConsultationEncounter => e.type === "consultation")
                   .map((encounter, i) => (
-                    <PrescriptionCard key={i} encounter={encounter} defaultOpen={i === 0} />
+                    <PrescriptionCard key={getEncounterKey(encounter, i)} encounter={encounter} defaultOpen={i === 0} />
                   ))}
               </div>
             </TabsContent>
@@ -171,10 +186,10 @@ const Historial = () => {
             {/* Lab Tab */}
             <TabsContent value="laboratorio">
               <div className="space-y-4">
-                {mockEncounters
+                {encounterList
                   .filter((e): e is LabEncounter => e.type === "lab")
                   .map((encounter, i) => (
-                    <LabCard key={i} encounter={encounter} defaultOpen={i === 0} />
+                    <LabCard key={getEncounterKey(encounter, i)} encounter={encounter} defaultOpen={i === 0} />
                   ))}
               </div>
             </TabsContent>

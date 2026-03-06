@@ -31,9 +31,18 @@ const NotificationBell = () => {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-11 w-11">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative h-11 w-11"
+          aria-label={
+            unreadCount > 0
+              ? `Abrir notificaciones, ${unreadCount} sin leer`
+              : "Abrir notificaciones"
+          }
+        >
           <Bell className="h-5 w-5 text-muted-foreground" />
           {unreadCount > 0 && (
             <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
@@ -48,7 +57,7 @@ const NotificationBell = () => {
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="flex items-center gap-1 text-xs text-primary hover:underline"
+              className="flex items-center gap-1 text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <Check className="h-3 w-3" /> Marcar todo como leído
             </button>
@@ -66,7 +75,7 @@ const NotificationBell = () => {
               <button
                 key={n.id}
                 onClick={() => handleClick(n.id, n.link)}
-                className={`flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/50 ${
+                className={`flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
                   !n.read ? "bg-accent/20" : ""
                 }`}
               >

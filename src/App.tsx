@@ -1,28 +1,35 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Directory from "./pages/Directory";
-import DoctorProfile from "./pages/DoctorProfile";
-import DoctorDashboard from "./pages/DoctorDashboard";
-import DoctorAgenda from "./pages/DoctorAgenda";
-import DoctorConsultation from "./pages/DoctorConsultation";
-import DoctorPatients from "./pages/DoctorPatients";
-import DoctorPatientRecord from "./pages/DoctorPatientRecord";
-import DoctorSettings from "./pages/DoctorSettings";
-import DoctorLayout from "./layouts/DoctorLayout";
+import RouteFallback from "@/components/RouteFallback";
 import { NotificationProvider } from "./contexts/NotificationContext";
-import Teleconsulta from "./pages/Teleconsulta";
-import Historial from "./pages/Historial";
-import Login from "./pages/Login";
-import Privacidad from "./pages/Privacidad";
-import Terminos from "./pages/Terminos";
-import NotFound from "./pages/NotFound";
-
+const Index = lazy(() => import("./pages/Index"));
+const Directory = lazy(() => import("./pages/Directory"));
+const DoctorProfile = lazy(() => import("./pages/DoctorProfile"));
+const DoctorDashboard = lazy(() => import("./pages/DoctorDashboard"));
+const DoctorAgenda = lazy(() => import("./pages/DoctorAgenda"));
+const DoctorConsultation = lazy(() => import("./pages/DoctorConsultation"));
+const DoctorPatients = lazy(() => import("./pages/DoctorPatients"));
+const DoctorPatientRecord = lazy(() => import("./pages/DoctorPatientRecord"));
+const DoctorSettings = lazy(() => import("./pages/DoctorSettings"));
+const DoctorLayout = lazy(() => import("./layouts/DoctorLayout"));
+const Teleconsulta = lazy(() => import("./pages/Teleconsulta"));
+const Historial = lazy(() => import("./pages/Historial"));
+const Login = lazy(() => import("./pages/Login"));
+const Privacidad = lazy(() => import("./pages/Privacidad"));
+const Terminos = lazy(() => import("./pages/Terminos"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
+
+const DoctorPortal = () => (
+  <NotificationProvider>
+    <DoctorLayout />
+  </NotificationProvider>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,25 +37,27 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/directorio" element={<Directory />} />
-          <Route path="/doctor/:id" element={<DoctorProfile />} />
-          <Route path="/teleconsulta" element={<Teleconsulta />} />
-          <Route path="/historial" element={<Historial />} />
-          <Route path="/iniciar-sesion" element={<Login />} />
-          <Route path="/privacidad" element={<Privacidad />} />
-          <Route path="/terminos" element={<Terminos />} />
-          <Route path="/doctor/portal" element={<NotificationProvider><DoctorLayout /></NotificationProvider>}>
-            <Route index element={<DoctorDashboard />} />
-            <Route path="agenda" element={<DoctorAgenda />} />
-            <Route path="consulta/:appointmentId" element={<DoctorConsultation />} />
-            <Route path="pacientes" element={<DoctorPatients />} />
-            <Route path="pacientes/:patientId" element={<DoctorPatientRecord />} />
-            <Route path="configuracion" element={<DoctorSettings />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/directorio" element={<Directory />} />
+            <Route path="/doctor/:id" element={<DoctorProfile />} />
+            <Route path="/teleconsulta" element={<Teleconsulta />} />
+            <Route path="/historial" element={<Historial />} />
+            <Route path="/iniciar-sesion" element={<Login />} />
+            <Route path="/privacidad" element={<Privacidad />} />
+            <Route path="/terminos" element={<Terminos />} />
+            <Route path="/doctor/portal" element={<DoctorPortal />}>
+              <Route index element={<DoctorDashboard />} />
+              <Route path="agenda" element={<DoctorAgenda />} />
+              <Route path="consulta/:appointmentId" element={<DoctorConsultation />} />
+              <Route path="pacientes" element={<DoctorPatients />} />
+              <Route path="pacientes/:patientId" element={<DoctorPatientRecord />} />
+              <Route path="configuracion" element={<DoctorSettings />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

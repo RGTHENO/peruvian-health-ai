@@ -4,14 +4,14 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Stethoscope, User } from "lucide-react";
+import { Heart, LoaderCircle, Stethoscope, User } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useEffect, useRef, useState } from "react";
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Ingresa un correo electrónico válido" }).max(255, { message: "El correo no puede tener más de 255 caracteres" }),
@@ -22,6 +22,16 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
+  const [submittingRole, setSubmittingRole] = useState<"paciente" | "medico" | null>(null);
+  const redirectTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        window.clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const patientForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -33,20 +43,22 @@ const Login = () => {
     defaultValues: { email: "", password: "" },
   });
 
-  const handlePatientLogin = (data: LoginValues) => {
-    toast.success("¡Bienvenido! Redirigiendo...");
-    setTimeout(() => navigate("/historial"), 1500);
+  const handlePatientLogin = () => {
+    setSubmittingRole("paciente");
+    toast.success("¡Bienvenido! Redirigiendo…");
+    redirectTimeoutRef.current = window.setTimeout(() => navigate("/historial"), 1500);
   };
 
-  const handleDoctorLogin = (data: LoginValues) => {
-    toast.success("¡Bienvenido, Doctor! Redirigiendo al portal...");
-    setTimeout(() => navigate("/doctor/portal"), 1500);
+  const handleDoctorLogin = () => {
+    setSubmittingRole("medico");
+    toast.success("¡Bienvenido, Doctor! Redirigiendo al portal…");
+    redirectTimeoutRef.current = window.setTimeout(() => navigate("/doctor/portal"), 1500);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center py-12 px-4">
+      <main id="main-content" tabIndex={-1} className="flex-1 flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-2">
@@ -76,7 +88,16 @@ const Login = () => {
                         <FormItem>
                           <FormLabel>Correo electrónico</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="tu@email.com" {...field} />
+                            <Input
+                              type="email"
+                              name="patient_email"
+                              autoComplete="email"
+                              autoCapitalize="none"
+                              inputMode="email"
+                              spellCheck={false}
+                              placeholder="tu@email.com"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -89,13 +110,28 @@ const Login = () => {
                         <FormItem>
                           <FormLabel>Contraseña</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
+                            <Input
+                              type="password"
+                              name="patient_password"
+                              autoComplete="current-password"
+                              placeholder="••••••••"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" className="w-full">Ingresar como Paciente</Button>
+                    <Button type="submit" className="w-full" disabled={submittingRole === "paciente"}>
+                      {submittingRole === "paciente" ? (
+                        <>
+                          <LoaderCircle className="h-4 w-4 animate-spin" />
+                          Ingresando…
+                        </>
+                      ) : (
+                        "Ingresar como Paciente"
+                      )}
+                    </Button>
                   </form>
                 </Form>
               </TabsContent>
@@ -110,7 +146,16 @@ const Login = () => {
                         <FormItem>
                           <FormLabel>Correo electrónico</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="doctor@email.com" {...field} />
+                            <Input
+                              type="email"
+                              name="doctor_email"
+                              autoComplete="email"
+                              autoCapitalize="none"
+                              inputMode="email"
+                              spellCheck={false}
+                              placeholder="doctor@email.com"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -123,13 +168,28 @@ const Login = () => {
                         <FormItem>
                           <FormLabel>Contraseña</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
+                            <Input
+                              type="password"
+                              name="doctor_password"
+                              autoComplete="current-password"
+                              placeholder="••••••••"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" className="w-full">Ingresar como Médico</Button>
+                    <Button type="submit" className="w-full" disabled={submittingRole === "medico"}>
+                      {submittingRole === "medico" ? (
+                        <>
+                          <LoaderCircle className="h-4 w-4 animate-spin" />
+                          Ingresando…
+                        </>
+                      ) : (
+                        "Ingresar como Médico"
+                      )}
+                    </Button>
                   </form>
                 </Form>
               </TabsContent>

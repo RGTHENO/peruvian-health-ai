@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -6,23 +6,34 @@ import DoctorCard from "@/components/DoctorCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { doctors, specialties, insurances } from "@/data/doctors";
+import { doctors, specialties, insurances, type Doctor } from "@/data/doctors";
 
 const Directory = () => {
-  const [searchParams] = useSearchParams();
-  const initialModality = searchParams.get("modalidad") || "all";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("q") || "";
+  const specialty = searchParams.get("especialidad") || "all";
+  const insurance = searchParams.get("seguro") || "all";
+  const modality = searchParams.get("modalidad") || "all";
 
-  const [search, setSearch] = useState("");
-  const [specialty, setSpecialty] = useState("all");
-  const [insurance, setInsurance] = useState("all");
-  const [modality, setModality] = useState(initialModality);
+  const updateSearchParam = (key: string, value: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (!value || value === "all") {
+      nextParams.delete(key);
+    } else {
+      nextParams.set(key, value);
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
     return doctors.filter((d) => {
-      if (search && !d.name.toLowerCase().includes(search.toLowerCase()) && !d.specialty.toLowerCase().includes(search.toLowerCase())) return false;
+      if (query && !d.name.toLowerCase().includes(query) && !d.specialty.toLowerCase().includes(query)) return false;
       if (specialty !== "all" && d.specialty !== specialty) return false;
       if (insurance !== "all" && !d.insurance.includes(insurance)) return false;
-      if (modality !== "all" && !d.modality.includes(modality as any)) return false;
+      if (modality !== "all" && !d.modality.includes(modality as Doctor["modality"][number])) return false;
       return true;
     });
   }, [search, specialty, insurance, modality]);
@@ -30,7 +41,7 @@ const Directory = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1">
         <div className="bg-card border-b border-border py-8">
           <div className="container">
             <h1 className="text-3xl font-bold text-foreground font-serif mb-2">Directorio Médico</h1>
@@ -38,16 +49,21 @@ const Directory = () => {
 
             <div className="grid grid-cols-1 gap-3 mt-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nombre o especialidad..."
+                  name="q"
+                  type="search"
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-label="Buscar por nombre o especialidad"
+                  placeholder="Buscar por nombre o especialidad…"
                   className="pl-9"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => updateSearchParam("q", e.target.value)}
                 />
               </div>
-              <Select value={specialty} onValueChange={setSpecialty}>
-                <SelectTrigger><SelectValue placeholder="Especialidad" /></SelectTrigger>
+              <Select value={specialty} onValueChange={(value) => updateSearchParam("especialidad", value)}>
+                <SelectTrigger aria-label="Filtrar por especialidad"><SelectValue placeholder="Especialidad" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas las especialidades</SelectItem>
                   {specialties.map((s) => (
@@ -55,17 +71,17 @@ const Directory = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={insurance} onValueChange={setInsurance}>
-                <SelectTrigger><SelectValue placeholder="Seguro" /></SelectTrigger>
+              <Select value={insurance} onValueChange={(value) => updateSearchParam("seguro", value)}>
+                <SelectTrigger aria-label="Filtrar por seguro"><SelectValue placeholder="Seguro" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los seguros</SelectItem>
-                  {insurances.map((i) => (
-                    <SelectItem key={i} value={i}>{i}</SelectItem>
+                  {insurances.map((insuranceOption) => (
+                    <SelectItem key={insuranceOption} value={insuranceOption}>{insuranceOption}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={modality} onValueChange={setModality}>
-                <SelectTrigger><SelectValue placeholder="Modalidad" /></SelectTrigger>
+              <Select value={modality} onValueChange={(value) => updateSearchParam("modalidad", value)}>
+                <SelectTrigger aria-label="Filtrar por modalidad"><SelectValue placeholder="Modalidad" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas las modalidades</SelectItem>
                   <SelectItem value="presencial">Presencial</SelectItem>
@@ -77,7 +93,9 @@ const Directory = () => {
         </div>
 
         <div className="container py-8">
-          <p className="text-sm text-muted-foreground mb-4">{filtered.length} médicos encontrados</p>
+          <p className="text-sm text-muted-foreground mb-4">
+            {new Intl.NumberFormat("es-PE").format(filtered.length)} médicos encontrados
+          </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((d) => (
               <DoctorCard key={d.id} doctor={d} />

@@ -5,7 +5,7 @@ const Terminos = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 container py-12 max-w-3xl">
+      <main id="main-content" tabIndex={-1} className="flex-1 container py-12 max-w-3xl">
         <h1 className="text-3xl font-bold font-serif text-foreground mb-2">Términos de Uso</h1>
         <p className="text-muted-foreground mb-8">Última actualización: 1 de marzo de 2026</p>
 
