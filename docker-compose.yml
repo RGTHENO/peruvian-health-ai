@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: saludpe
+      POSTGRES_USER: saludpe
+      POSTGRES_PASSWORD: saludpe
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      SALUDPE_DATABASE_URL: postgresql+psycopg://saludpe:saludpe@db:5432/saludpe
+      SALUDPE_SECRET_KEY: change-this-in-production-32-bytes-minimum
+      SALUDPE_FRONTEND_URL: http://localhost:8080
+      SALUDPE_CORS_ORIGINS: '["http://localhost:8080","http://127.0.0.1:8080"]'
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
+

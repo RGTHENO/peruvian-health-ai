@@ -11,6 +11,16 @@ node_modules
 dist
 dist-ssr
 *.local
+.playwright-cli/
+.vite/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+*.pyc
+*.db
+*.egg-info/
 
 # Editor directories and files
 .vscode/*

@@ -1,73 +1,71 @@
-# Welcome to your Lovable project
+# SaludPe Monorepo
 
-## Project info
+Monorepo con:
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+- [frontend](/home/victor/Documents/SALUD/peruvian-health-ai/frontend) para la app React/Vite
+- [backend](/home/victor/Documents/SALUD/peruvian-health-ai/backend) para la API FastAPI
 
-## How can I edit this code?
+## Estructura
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```text
+peruvian-health-ai/
+  frontend/
+  backend/
+  backend-plan.md
+  insights.md
+  docker-compose.yml
+  Makefile
 ```
 
-**Edit a file directly in GitHub**
+## Requisitos
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- Node.js 20+
+- Python 3.12
+- Docker opcional para levantar todo el stack
 
-**Use GitHub Codespaces**
+## Comandos útiles
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Frontend
 
-## What technologies are used for this project?
+```bash
+npm --prefix frontend install
+npm --prefix frontend run dev -- --host 0.0.0.0 --port 8080
+```
 
-This project is built with:
+### Backend
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+python3.12 -m venv backend/.venv
+backend/.venv/bin/pip install -e ./backend[dev]
+cd backend
+../backend/.venv/bin/fastapi dev --host 0.0.0.0 --port 8000
+```
 
-## How can I deploy this project?
+### Monorepo completo
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```bash
+docker compose up --build
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Credenciales demo
 
-Yes, you can!
+- Médico: `medico@saludpe.pe` / `SaludPe123!`
+- Paciente: `paciente@saludpe.pe` / `SaludPe123!`
+- Admin: `admin@saludpe.pe` / `SaludPe123!`
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Endpoints principales
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- `GET /healthz`
+- `GET /readyz`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/directory/doctors`
+- `GET /api/v1/doctors/me/dashboard`
+- `GET /api/v1/patients/me/history`
+- `POST /api/v1/patients/{patient_id}/encounters/consultations`
+
+## Estado actual
+
+- frontend movido a `frontend/`
+- backend FastAPI operativo con seeds, auth, directorio, agenda, pacientes e historial
+- tests backend incluidos
+
