@@ -1,6 +1,6 @@
 # Project Insights
 
-Date: 2026-03-07
+Date: 2026-03-08
 Repository: `peruvian-health-ai`
 
 ## Summary
@@ -11,6 +11,13 @@ El cambio consolida `peruvian-health-ai` como monorepo real y deja la aplicació
 - se agregó un backend `FastAPI` en `backend/`
 - el frontend dejó de depender solo de mocks/localStorage para autenticación, portal médico, notificaciones y configuración
 - se añadieron flujos locales de desarrollo para monorepo completo con `Makefile` y `docker-compose`
+
+En la iteración del 2026-03-08 se añadieron:
+
+- registro de pacientes (backend + frontend) con perfil y handle de Telegram
+- plan de entrega de citas (email, WhatsApp, Telegram) con recibo post-reserva en el frontend
+- migración Alembic automática al iniciar (`init_database` ejecuta `upgrade head`)
+- revisión de calidad de código: N+1 queries, validación Pydantic, consolidación de lógica duplicada
 
 ## Scope Of Changes
 
@@ -151,17 +158,81 @@ Impact:
 - Onboarding local más claro.
 - Base razonable para CI y despliegue reproducible del stack completo.
 
+### 7. Patient registration and Telegram handle
+
+Files:
+- `backend/app/api/v1/endpoints/auth.py`
+- `backend/app/services/auth.py`
+- `backend/app/schemas/auth.py`
+- `backend/app/schemas/patient.py`
+- `backend/app/repositories/patients.py`
+- `backend/app/db/models/patient.py`
+- `backend/migrations/versions/20260308_0003_patient_telegram_handle.py`
+- `frontend/src/contexts/AuthContext.tsx`
+- `frontend/src/lib/api.ts`
+- `frontend/src/pages/Login.tsx`
+
+Changes:
+- Se añadió endpoint `POST /auth/register/patient` para registro de pacientes con perfil automático.
+- El modelo `PatientProfile` incorpora `telegram_handle` (nullable) con migración Alembic.
+- El schema `PatientRegistrationRequest` incluye validadores Pydantic para normalización de campos (strip whitespace, normalizar handle de Telegram).
+- El frontend expone `registerPatient` en `AuthContext` y `api.ts`, y el formulario de login incluye modo registro.
+- Se consolidaron `RefreshRequest` y `LogoutRequest` en un solo schema `RefreshTokenRequest`.
+- Se extrajo `decode_refresh_token` como helper compartido entre el endpoint `refresh` y `logout_session`.
+
+Impact:
+- Los pacientes pueden registrarse desde el frontend con validación de datos.
+- Telegram queda como canal opcional de notificación, vinculado al perfil del paciente.
+
+### 8. Appointment delivery plan and booking receipt
+
+Files:
+- `backend/app/services/serializers.py`
+- `backend/app/schemas/appointment.py`
+- `frontend/src/data/appointments.ts`
+- `frontend/src/lib/api.ts`
+- `frontend/src/pages/DoctorProfile.tsx`
+
+Changes:
+- `serialize_appointment` ahora genera un bloque `delivery` con canales (email, WhatsApp, Telegram) y acceso (enlace de teleconsulta o dirección presencial).
+- Se definieron schemas Pydantic (`AppointmentDeliveryPlan`, `AppointmentDeliveryChannel`, `AppointmentAccessInfo`) para la estructura de entrega.
+- El frontend muestra un diálogo de recibo post-reserva con detalle de cada canal de entrega y enlace copiable para teleconsulta.
+
+Impact:
+- El paciente ve un resumen claro de cómo recibirá la información de su cita tras reservar.
+- La API provee datos estructurados sobre los canales de comunicación disponibles por cita.
+
+### 9. Alembic auto-migration and code quality cleanup
+
+Files:
+- `backend/app/db/seed.py`
+- `backend/app/repositories/appointments.py`
+- `backend/app/core/config.py`
+
+Changes:
+- `init_database` ahora ejecuta `alembic upgrade head` automáticamente al iniciar, con detección de tablas pre-existentes sin versión Alembic (stamp de revisión base).
+- Se añadió `joinedload` para `patient` y `doctor` en todas las queries de appointments, eliminando N+1 queries.
+- Se reutiliza un solo hash de contraseña en el seed de datos demo (~200ms de ahorro).
+- Se añadieron orígenes CORS adicionales (puerto 4301).
+- Se usaron comparaciones de enum (`AppointmentType.TELEMEDICINE`) en lugar de strings literales en serializers.
+
+Impact:
+- Las migraciones se aplican automáticamente sin intervención manual.
+- Las queries de citas son significativamente más eficientes en endpoints que listan múltiples appointments.
+
 ## Validation
 
-- `cd backend && .venv/bin/pytest` -> `8 passed`
+- `cd backend && .venv/bin/pytest` -> `9 passed`
 - `cd backend && .venv/bin/ruff check .` -> passing
 - `npm --prefix frontend run build` -> passing
 - `npm --prefix frontend run test` -> passing
-- Nota no bloqueante: Vite mostró el aviso habitual de `Browserslist: browsers data (caniuse-lite) is 9 months old`, pero no afectó build ni tests.
 
 ## Final State
 
-- Repositorio reorganizado como monorepo.
-- Backend FastAPI funcional añadido al proyecto.
+- Repositorio organizado como monorepo con backend FastAPI y frontend React/Vite.
+- Registro de pacientes funcional con validación y perfil automático.
+- Sistema de entrega de citas con canales email, WhatsApp y Telegram.
+- Migraciones Alembic automáticas al iniciar.
+- Queries de appointments optimizadas con eager loading.
 - Frontend conectado a autenticación y datos reales para los flujos principales.
 - Configuración local y contenedorizada disponible para levantar el stack completo.

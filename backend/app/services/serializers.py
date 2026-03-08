@@ -1,6 +1,7 @@
 from datetime import date, time
 
-from app.db.models.appointment import Appointment
+from app.core.config import get_settings
+from app.db.models.appointment import Appointment, AppointmentType
 from app.db.models.doctor import DoctorProfile
 from app.db.models.encounter import Encounter, EncounterKind
 from app.db.models.patient import PatientProfile
@@ -52,6 +53,7 @@ def serialize_patient_summary(patient: PatientProfile) -> PatientSummary:
         gender=patient.gender,
         phone=patient.phone,
         email=patient.email,
+        telegram_handle=patient.telegram_handle,
         insurance=patient.insurance,
         last_visit=patient.last_visit,
         conditions=patient.conditions,
@@ -81,12 +83,21 @@ def serialize_patient_detail(patient: PatientProfile) -> PatientDetail:
 
 
 def serialize_appointment(appointment: Appointment) -> AppointmentSummary:
+    frontend_url = get_settings().frontend_url.rstrip("/")
+    is_telemedicine = appointment.type == AppointmentType.TELEMEDICINE
+    patient = appointment.patient
+    doctor = appointment.doctor
+
+    join_url = f"{frontend_url}/teleconsulta?appointment={appointment.id}" if is_telemedicine else None
+    whatsapp_enabled = bool((patient.phone or "").strip())
+    telegram_enabled = bool((patient.telegram_handle or "").strip())
+
     return AppointmentSummary(
         id=appointment.id,
         patient_id=appointment.patient_id,
-        patient_name=appointment.patient.name,
+        patient_name=patient.name,
         doctor_id=appointment.doctor_id,
-        doctor_name=appointment.doctor.name,
+        doctor_name=doctor.name,
         date=format_date(appointment.date),
         time=format_time(appointment.time),
         duration=appointment.duration,
@@ -94,6 +105,44 @@ def serialize_appointment(appointment: Appointment) -> AppointmentSummary:
         status=appointment.status.value,
         reason=appointment.reason,
         notes=appointment.notes,
+        delivery={
+            "email": {
+                "enabled": True,
+                "destination": patient.email,
+                "status": "scheduled",
+                "summary": "Enviaremos la confirmacion, el detalle de la cita y el acceso correspondiente por email.",
+            },
+            "whatsapp": {
+                "enabled": whatsapp_enabled,
+                "destination": patient.phone if whatsapp_enabled else None,
+                "status": "scheduled" if whatsapp_enabled else "unavailable",
+                "summary": (
+                    "Enviaremos resumen y recordatorios por WhatsApp al numero registrado."
+                    if whatsapp_enabled
+                    else "Necesitamos un numero celular valido para enviar WhatsApp."
+                ),
+            },
+            "telegram": {
+                "enabled": telegram_enabled,
+                "destination": f"@{patient.telegram_handle}" if telegram_enabled else None,
+                "status": "scheduled" if telegram_enabled else "unavailable",
+                "summary": (
+                    "Telegram recibira el mismo resumen y recordatorios del enlace."
+                    if telegram_enabled
+                    else "Telegram solo se habilita cuando el paciente vincula su usuario."
+                ),
+            },
+            "access": {
+                "type": appointment.type.value,
+                "instructions": (
+                    "Recibirás el enlace de ingreso y recordatorios por los canales habilitados."
+                    if is_telemedicine
+                    else f"Presentate en {doctor.location} 10 minutos antes de la cita."
+                ),
+                "join_url": join_url,
+                "location": None if is_telemedicine else doctor.location,
+            },
+        },
     )
 
 

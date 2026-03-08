@@ -1,6 +1,10 @@
 from datetime import UTC, date, datetime, time, timedelta
+from pathlib import Path
 
-from sqlalchemy import select
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import inspect as sa_inspect
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -27,13 +31,15 @@ def seed_database(db: Session) -> None:
     two_days_ago = today - timedelta(days=2)
     now = datetime.now(UTC)
 
+    seed_password_hash = hash_password("SaludPe123!")
+
     users = [
         User(
             id="u-admin",
             email="admin@saludpe.pe",
             full_name="Administrador SaludPe",
             role=UserRole.ADMIN,
-            password_hash=hash_password("SaludPe123!"),
+            password_hash=seed_password_hash,
             notification_preferences=User.DEFAULT_NOTIFICATION_PREFERENCES,
         ),
         User(
@@ -41,7 +47,7 @@ def seed_database(db: Session) -> None:
             email="medico@saludpe.pe",
             full_name="Dra. María Elena Quispe",
             role=UserRole.DOCTOR,
-            password_hash=hash_password("SaludPe123!"),
+            password_hash=seed_password_hash,
             notification_preferences=User.DEFAULT_NOTIFICATION_PREFERENCES,
         ),
         User(
@@ -49,7 +55,7 @@ def seed_database(db: Session) -> None:
             email="paciente@saludpe.pe",
             full_name="Juan Pérez Sánchez",
             role=UserRole.PATIENT,
-            password_hash=hash_password("SaludPe123!"),
+            password_hash=seed_password_hash,
             notification_preferences=User.DEFAULT_NOTIFICATION_PREFERENCES,
         ),
     ]
@@ -679,6 +685,34 @@ def seed_database(db: Session) -> None:
 
 
 def init_database(engine) -> None:
+    backend_dir = Path(__file__).resolve().parents[2]
+    alembic_config = Config(str(backend_dir / "alembic.ini"))
+    alembic_config.set_main_option("script_location", str(backend_dir / "migrations"))
+    alembic_config.set_main_option("sqlalchemy.url", get_settings().database_url)
+
+    table_names = set(sa_inspect(engine).get_table_names())
+    app_tables = {
+        "users",
+        "doctor_profiles",
+        "patient_profiles",
+        "appointments",
+        "encounters",
+        "refresh_tokens",
+        "notifications",
+    }
+
+    current_revision = None
+    if "alembic_version" in table_names:
+        with engine.connect() as connection:
+            current_revision = connection.execute(
+                text("SELECT version_num FROM alembic_version LIMIT 1")
+            ).scalar_one_or_none()
+
+    if app_tables.intersection(table_names) and not current_revision:
+        command.stamp(alembic_config, "20260306_0001")
+
+    command.upgrade(alembic_config, "head")
+
     Base.metadata.create_all(bind=engine)
     with Session(bind=engine) as db:
         seed_database(db)

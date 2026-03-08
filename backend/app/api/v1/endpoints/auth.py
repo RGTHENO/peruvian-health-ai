@@ -1,20 +1,21 @@
-import jwt
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
 from app.api.deps import CurrentUserDep, SessionDep
-from app.core.security import TokenType, decode_token
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
     LogoutRequest,
+    PatientRegistrationRequest,
     RefreshRequest,
     TokenPairResponse,
 )
 from app.services.auth import (
     authenticate_user,
     change_password,
+    decode_refresh_token,
     logout_session,
     refresh_session,
+    register_patient,
     serialize_user,
 )
 
@@ -26,18 +27,14 @@ def login(payload: LoginRequest, db: SessionDep) -> TokenPairResponse:
     return authenticate_user(db, payload.email, payload.password, payload.role)
 
 
+@router.post("/register/patient", response_model=TokenPairResponse)
+def register(payload: PatientRegistrationRequest, db: SessionDep) -> TokenPairResponse:
+    return register_patient(db, payload)
+
+
 @router.post("/refresh", response_model=TokenPairResponse)
 def refresh(payload: RefreshRequest, db: SessionDep) -> TokenPairResponse:
-    try:
-        token_data = decode_token(payload.refresh_token)
-    except jwt.PyJWTError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido"
-        ) from exc
-    if token_data.get("type") != TokenType.REFRESH.value:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido"
-        )
+    token_data = decode_refresh_token(payload.refresh_token)
     return refresh_session(db, str(token_data["sub"]), str(token_data["jti"]))
 
 

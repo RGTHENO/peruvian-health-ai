@@ -14,6 +14,7 @@ class PatientSummary(BaseModel):
     gender: str
     phone: str
     email: str
+    telegram_handle: str | None = None
     insurance: str
     last_visit: str | None = None
     conditions: list[str]

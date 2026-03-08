@@ -12,6 +12,7 @@ import {
   fetchCurrentUser,
   login as loginRequest,
   logout as logoutRequest,
+  registerPatient as registerPatientRequest,
   type AuthUser,
 } from "@/lib/api";
 import {
@@ -30,6 +31,16 @@ interface AuthContextValue {
     email: string;
     password: string;
     role: "patient" | "doctor";
+  }) => Promise<AuthSession>;
+  registerPatient: (payload: {
+    fullName: string;
+    email: string;
+    password: string;
+    phone: string;
+    age: number;
+    gender: "M" | "F";
+    insurance: string;
+    telegramHandle?: string;
   }) => Promise<AuthSession>;
   logout: () => Promise<void>;
   refreshCurrentUser: () => Promise<AuthUser | null>;
@@ -93,6 +104,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [queryClient],
   );
 
+  const handleRegisterPatient = useCallback<AuthContextValue["registerPatient"]>(
+    async (payload) => {
+      const nextSession = await registerPatientRequest(payload);
+      setStoredSession(nextSession);
+      queryClient.clear();
+      return nextSession;
+    },
+    [queryClient],
+  );
+
   const handleLogout = useCallback(async () => {
     const currentSession = getStoredSession();
 
@@ -132,11 +153,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       session,
       user: session?.user ?? null,
       login: handleLogin,
+      registerPatient: handleRegisterPatient,
       logout: handleLogout,
       refreshCurrentUser,
       updateCurrentUser,
     }),
-    [handleLogin, handleLogout, initialized, refreshCurrentUser, session, updateCurrentUser],
+    [
+      handleLogin,
+      handleLogout,
+      handleRegisterPatient,
+      initialized,
+      refreshCurrentUser,
+      session,
+      updateCurrentUser,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

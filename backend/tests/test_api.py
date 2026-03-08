@@ -133,6 +133,11 @@ def test_patient_booking_requires_auth_and_creates_doctor_notification(client):
     booking = create_response.json()
     assert booking["status"] == "en-espera"
     assert booking["patient_id"] == "p1"
+    assert booking["delivery"]["email"]["enabled"] is True
+    assert booking["delivery"]["whatsapp"]["enabled"] is True
+    assert booking["delivery"]["telegram"]["enabled"] is False
+    assert booking["delivery"]["access"]["type"] == "telemedicina"
+    assert booking["delivery"]["access"]["join_url"].endswith(booking["id"])
 
     doctor_token = get_access_token(
         client,
@@ -252,3 +257,31 @@ def test_doctor_profile_preferences_and_password_cycle(client):
         },
     )
     assert relogin.status_code == 200
+
+
+def test_patient_registration_creates_account_and_profile(client):
+    response = client.post(
+        "/api/v1/auth/register/patient",
+        json={
+            "full_name": "Lucia Torres Vega",
+            "email": "lucia.torres@example.com",
+            "password": "SaludPe789!",
+            "phone": "+51 955 123 456",
+            "age": 29,
+            "gender": "F",
+            "insurance": "Particular",
+            "telegram_handle": "lucia_salud",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["user"]["role"] == "patient"
+    assert payload["user"]["patient_id"]
+
+    profile = client.get(
+        "/api/v1/patients/me/profile",
+        headers={"Authorization": f"Bearer {payload['access_token']}"},
+    )
+    assert profile.status_code == 200
+    assert profile.json()["email"] == "lucia.torres@example.com"
+    assert profile.json()["telegram_handle"] == "lucia_salud"

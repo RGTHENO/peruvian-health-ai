@@ -25,9 +25,14 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
+  CheckCircle2,
   Clock,
+  Copy,
   Globe,
+  Mail,
   MapPin,
+  MessageCircle,
+  Send,
   Shield,
   Star,
   Video,
@@ -35,6 +40,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api-client";
+import type { Appointment } from "@/data/appointments";
 import {
   createAppointment,
   fetchDoctorAvailability,
@@ -53,10 +59,11 @@ const DoctorProfile = () => {
     searchParams.get("modality"),
   );
   const [bookingReason, setBookingReason] = useState(() => searchParams.get("reason") ?? "");
-  const [bookingNotes, setBookingNotes] = useState("");
+  const [bookingNotes, setBookingNotes] = useState(() => searchParams.get("notes") ?? "");
   const [showConfirmDialog, setShowConfirmDialog] = useState(() =>
     searchParams.get("confirm") === "1",
   );
+  const [bookingReceipt, setBookingReceipt] = useState<Appointment | null>(null);
 
   const doctorQuery = useQuery({
     queryKey: ["doctor", id],
@@ -101,6 +108,13 @@ const DoctorProfile = () => {
   );
 
   useEffect(() => {
+    if (availabilityQuery.isLoading) return;
+
+    if (!availability.length) {
+      setSelectedSlot(null);
+      return;
+    }
+
     if (!selectedAvailability) {
       setSelectedSlot(null);
       return;
@@ -109,7 +123,7 @@ const DoctorProfile = () => {
     if (selectedSlot && !selectedAvailability.slots.includes(selectedSlot)) {
       setSelectedSlot(null);
     }
-  }, [selectedAvailability, selectedSlot]);
+  }, [availability.length, availabilityQuery.isLoading, selectedAvailability, selectedSlot]);
 
   const bookingMutation = useMutation({
     mutationFn: createAppointment,
@@ -121,12 +135,14 @@ const DoctorProfile = () => {
         description: `Solicitud registrada para el ${appointment.date} a las ${appointment.time}.`,
       });
       setShowConfirmDialog(false);
+      setBookingReceipt(appointment);
       setSelectedSlot(null);
       setBookingReason("");
       setBookingNotes("");
       if (doctor?.modality.length && doctor.modality.length > 1) {
         setSelectedModality(null);
       }
+      navigate(`/doctor/${doctor?.id}`, { replace: true });
     },
     onError: (error) => {
       const description =
@@ -181,6 +197,7 @@ const DoctorProfile = () => {
     if (selectedSlot) params.set("slot", selectedSlot);
     if (selectedModality) params.set("modality", selectedModality);
     if (bookingReason.trim()) params.set("reason", bookingReason.trim());
+    if (bookingNotes.trim()) params.set("notes", bookingNotes.trim());
     params.set("confirm", "1");
     return `/doctor/${doctor.id}?${params.toString()}`;
   };
@@ -211,6 +228,18 @@ const DoctorProfile = () => {
       reason: bookingReason.trim(),
       notes: bookingNotes.trim() || undefined,
     });
+  };
+
+  const handleCopyJoinLink = async () => {
+    const joinUrl = bookingReceipt?.delivery?.access.joinUrl;
+    if (!joinUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(joinUrl);
+      toast.success("Enlace copiado");
+    } catch {
+      toast.error("No se pudo copiar el enlace");
+    }
   };
 
   return (
@@ -486,6 +515,13 @@ const DoctorProfile = () => {
                 <p className="text-xs text-center text-muted-foreground">
                   Pago seguro con Culqi, Yape o Plin
                 </p>
+                {selectedModality && (
+                  <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+                    {selectedModality === "telemedicina"
+                      ? "Cuando confirmes la reserva enviaremos el enlace de teleconsulta por email y WhatsApp. Telegram queda activo solo si el paciente vinculó su usuario."
+                      : "Cuando confirmes la reserva enviaremos por email y WhatsApp la dirección, fecha y recordatorios de la cita."}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -544,6 +580,97 @@ const DoctorProfile = () => {
             <Button onClick={handleConfirmBooking} disabled={bookingMutation.isPending}>
               {bookingMutation.isPending ? "Reservando…" : "Confirmar Reserva"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(bookingReceipt)}
+        onOpenChange={(open) => {
+          if (!open) setBookingReceipt(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-serif">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              Reserva registrada
+            </DialogTitle>
+            <DialogDescription>
+              Esta es la forma en la que SaludPe entregará la información de tu cita.
+            </DialogDescription>
+          </DialogHeader>
+
+          {bookingReceipt?.delivery && (
+            <div className="space-y-4 text-sm">
+              <div className="rounded-xl border border-border bg-muted/30 p-4">
+                <p className="font-medium text-foreground">Acceso a la cita</p>
+                <p className="mt-1 text-muted-foreground">
+                  {bookingReceipt.delivery.access.instructions}
+                </p>
+                {bookingReceipt.delivery.access.location && (
+                  <p className="mt-2 font-medium text-foreground">
+                    Dirección: {bookingReceipt.delivery.access.location}
+                  </p>
+                )}
+                {bookingReceipt.delivery.access.joinUrl && (
+                  <div className="mt-3 space-y-2">
+                    <p className="font-medium text-foreground">Enlace de teleconsulta</p>
+                    <div className="flex gap-2">
+                      <Input readOnly value={bookingReceipt.delivery.access.joinUrl} />
+                      <Button type="button" variant="outline" onClick={handleCopyJoinLink}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-border p-3">
+                  <p className="flex items-center gap-2 font-medium text-foreground">
+                    <Mail className="h-4 w-4 text-primary" />
+                    Email
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {bookingReceipt.delivery.email.destination}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {bookingReceipt.delivery.email.summary}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border p-3">
+                  <p className="flex items-center gap-2 font-medium text-foreground">
+                    <MessageCircle className="h-4 w-4 text-primary" />
+                    WhatsApp
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {bookingReceipt.delivery.whatsapp.destination ?? "No configurado"}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {bookingReceipt.delivery.whatsapp.summary}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border p-3">
+                  <p className="flex items-center gap-2 font-medium text-foreground">
+                    <Send className="h-4 w-4 text-primary" />
+                    Telegram
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {bookingReceipt.delivery.telegram.destination ?? "No vinculado"}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {bookingReceipt.delivery.telegram.summary}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setBookingReceipt(null)}>Entendido</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

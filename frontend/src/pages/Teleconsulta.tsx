@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,36 @@ const benefits = [
 ];
 
 const Teleconsulta = () => {
+  const [searchParams] = useSearchParams();
+  const appointmentId = searchParams.get("appointment");
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main id="main-content" tabIndex={-1} className="flex-1">
+        {appointmentId && (
+          <section className="container pt-8">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-medium text-primary">Sala de teleconsulta lista</p>
+                  <h1 className="mt-1 font-serif text-2xl text-foreground">
+                    Acceso a la cita virtual
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Código de cita: <span className="font-medium text-foreground">{appointmentId}</span>.
+                    Conserva este enlace; también se comparte por email y WhatsApp, y por Telegram si
+                    el paciente vinculó su cuenta.
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link to="/historial">Ver mi historial</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
         {/* Hero */}
         <section className="bg-primary py-12 sm:py-16">
           <div className="container text-center">

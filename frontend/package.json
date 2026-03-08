@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "e2e:smoke": "node ./scripts/e2e-smoke.mjs",
+    "e2e:booking-auth": "node ./scripts/e2e-booking-auth-flow.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

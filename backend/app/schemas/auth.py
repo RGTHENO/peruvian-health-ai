@@ -1,25 +1,51 @@
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+PatientGender = Literal["M", "F"]
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6, max_length=100)
+    password: str = Field(min_length=8, max_length=100)
     role: Literal["patient", "doctor", "admin"] | None = None
 
 
-class RefreshRequest(BaseModel):
+class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
-class LogoutRequest(BaseModel):
-    refresh_token: str
+RefreshRequest = RefreshTokenRequest
+LogoutRequest = RefreshTokenRequest
 
 
 class ChangePasswordRequest(BaseModel):
-    current_password: str = Field(min_length=6, max_length=100)
+    current_password: str = Field(min_length=8, max_length=100)
     new_password: str = Field(min_length=8, max_length=100)
+
+
+class PatientRegistrationRequest(BaseModel):
+    full_name: str = Field(min_length=3, max_length=255)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=100)
+    phone: str = Field(min_length=7, max_length=50)
+    age: int = Field(ge=0, le=120)
+    gender: PatientGender
+    insurance: str = Field(default="Particular", min_length=2, max_length=120)
+    telegram_handle: str | None = Field(default=None, max_length=120)
+
+    @field_validator("full_name", "phone", "insurance")
+    @classmethod
+    def strip_whitespace(cls, v: str) -> str:
+        return v.strip()
+
+    @field_validator("telegram_handle")
+    @classmethod
+    def normalize_telegram(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        cleaned = v.strip().lstrip("@")
+        return cleaned or None
 
 
 class AuthUser(BaseModel):

@@ -1,19 +1,26 @@
 from datetime import date
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.appointment import Appointment
 
 
+def _base_query():
+    return (
+        select(Appointment)
+        .options(joinedload(Appointment.patient), joinedload(Appointment.doctor))
+    )
+
+
 def list_appointments(db: Session) -> list[Appointment]:
-    return list(db.scalars(select(Appointment).order_by(Appointment.date, Appointment.time)))
+    return list(db.scalars(_base_query().order_by(Appointment.date, Appointment.time)))
 
 
 def list_appointments_for_doctor(db: Session, doctor_id: str) -> list[Appointment]:
     return list(
         db.scalars(
-            select(Appointment)
+            _base_query()
             .where(Appointment.doctor_id == doctor_id)
             .order_by(Appointment.date, Appointment.time)
         )
@@ -23,7 +30,7 @@ def list_appointments_for_doctor(db: Session, doctor_id: str) -> list[Appointmen
 def list_appointments_for_patient(db: Session, patient_id: str) -> list[Appointment]:
     return list(
         db.scalars(
-            select(Appointment)
+            _base_query()
             .where(Appointment.patient_id == patient_id)
             .order_by(Appointment.date, Appointment.time)
         )
@@ -31,7 +38,7 @@ def list_appointments_for_patient(db: Session, patient_id: str) -> list[Appointm
 
 
 def get_appointment(db: Session, appointment_id: str) -> Appointment | None:
-    return db.scalar(select(Appointment).where(Appointment.id == appointment_id))
+    return db.scalar(_base_query().where(Appointment.id == appointment_id))
 
 
 def create_appointment(db: Session, appointment: Appointment) -> Appointment:

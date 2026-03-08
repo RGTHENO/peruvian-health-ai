@@ -33,6 +33,8 @@ class Settings(BaseSettings):
         "http://127.0.0.1:4173",
         "http://localhost:4174",
         "http://127.0.0.1:4174",
+        "http://localhost:4301",
+        "http://127.0.0.1:4301",
     ]
     frontend_url: str = "http://localhost:8080"
     seed_demo_data: bool = True

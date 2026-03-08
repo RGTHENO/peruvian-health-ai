@@ -14,6 +14,7 @@ class PatientProfile(Base):
     gender: Mapped[str] = mapped_column(String(1))
     phone: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(255))
+    telegram_handle: Mapped[str | None] = mapped_column(String(120), nullable=True)
     insurance: Mapped[str] = mapped_column(String(120), index=True)
     last_visit: Mapped[str | None] = mapped_column(String(20), nullable=True)
     avatar: Mapped[str] = mapped_column(String(500), default="")

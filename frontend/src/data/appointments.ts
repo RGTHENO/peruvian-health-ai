@@ -5,6 +5,7 @@ export interface Patient {
   gender: "M" | "F";
   phone: string;
   email: string;
+  telegramHandle?: string;
   insurance: string;
   lastVisit: string;
   conditions: string[];
@@ -12,6 +13,27 @@ export interface Patient {
   bloodType?: string;
   allergies?: string[];
   emergencyContact?: { name: string; phone: string; relationship: string };
+}
+
+export interface AppointmentDeliveryChannel {
+  enabled: boolean;
+  destination?: string;
+  status: "scheduled" | "unavailable";
+  summary: string;
+}
+
+export interface AppointmentAccessInfo {
+  type: "presencial" | "telemedicina";
+  instructions: string;
+  joinUrl?: string;
+  location?: string;
+}
+
+export interface AppointmentDeliveryPlan {
+  email: AppointmentDeliveryChannel;
+  whatsapp: AppointmentDeliveryChannel;
+  telegram: AppointmentDeliveryChannel;
+  access: AppointmentAccessInfo;
 }
 
 export interface Appointment {
@@ -25,6 +47,7 @@ export interface Appointment {
   status: "confirmada" | "en-espera" | "cancelada" | "completada";
   reason: string;
   notes?: string;
+  delivery?: AppointmentDeliveryPlan;
 }
 
 export const patients: Patient[] = [

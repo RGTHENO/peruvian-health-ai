@@ -4,6 +4,28 @@ from pydantic import BaseModel, Field
 
 AppointmentTypeValue = Literal["presencial", "telemedicina"]
 AppointmentStatusValue = Literal["confirmada", "en-espera", "cancelada", "completada"]
+DeliveryChannelStatusValue = Literal["scheduled", "unavailable"]
+
+
+class AppointmentDeliveryChannel(BaseModel):
+    enabled: bool
+    destination: str | None = None
+    status: DeliveryChannelStatusValue
+    summary: str
+
+
+class AppointmentAccessInfo(BaseModel):
+    type: AppointmentTypeValue
+    instructions: str
+    join_url: str | None = None
+    location: str | None = None
+
+
+class AppointmentDeliveryPlan(BaseModel):
+    email: AppointmentDeliveryChannel
+    whatsapp: AppointmentDeliveryChannel
+    telegram: AppointmentDeliveryChannel
+    access: AppointmentAccessInfo
 
 
 class AppointmentSummary(BaseModel):
@@ -19,6 +41,7 @@ class AppointmentSummary(BaseModel):
     status: AppointmentStatusValue
     reason: str
     notes: str | None = None
+    delivery: AppointmentDeliveryPlan | None = None
 
 
 class AppointmentCreateRequest(BaseModel):

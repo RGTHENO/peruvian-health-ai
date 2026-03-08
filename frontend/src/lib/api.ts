@@ -1,6 +1,6 @@
 import type { Doctor } from "@/data/doctors";
 import type { AppNotification, NotificationPreferences } from "@/data/notifications";
-import type { Appointment, Patient } from "@/data/appointments";
+import type { Appointment, AppointmentDeliveryPlan, Patient } from "@/data/appointments";
 import type {
   ConsultationEncounter,
   Encounter,
@@ -44,6 +44,32 @@ interface AppointmentResponse {
   status: Appointment["status"];
   reason: string;
   notes?: string | null;
+  delivery?: {
+    email: {
+      enabled: boolean;
+      destination?: string | null;
+      status: "scheduled" | "unavailable";
+      summary: string;
+    };
+    whatsapp: {
+      enabled: boolean;
+      destination?: string | null;
+      status: "scheduled" | "unavailable";
+      summary: string;
+    };
+    telegram: {
+      enabled: boolean;
+      destination?: string | null;
+      status: "scheduled" | "unavailable";
+      summary: string;
+    };
+    access: {
+      type: Appointment["type"];
+      instructions: string;
+      join_url?: string | null;
+      location?: string | null;
+    };
+  } | null;
 }
 
 interface EmergencyContactResponse {
@@ -59,6 +85,7 @@ interface PatientResponse {
   gender: Patient["gender"];
   phone: string;
   email: string;
+  telegram_handle?: string | null;
   insurance: string;
   last_visit?: string | null;
   conditions: string[];
@@ -170,6 +197,17 @@ interface LoginInput {
   role: "patient" | "doctor";
 }
 
+interface RegisterPatientInput {
+  fullName: string;
+  email: string;
+  password: string;
+  phone: string;
+  age: number;
+  gender: Patient["gender"];
+  insurance: string;
+  telegramHandle?: string;
+}
+
 interface DirectorySearchParams {
   q?: string;
   especialidad?: string;
@@ -251,6 +289,34 @@ const mapAppointment = (appointment: AppointmentResponse): Appointment => ({
   status: appointment.status,
   reason: appointment.reason,
   notes: appointment.notes ?? undefined,
+  delivery: appointment.delivery
+    ? ({
+        email: {
+          enabled: appointment.delivery.email.enabled,
+          destination: appointment.delivery.email.destination ?? undefined,
+          status: appointment.delivery.email.status,
+          summary: appointment.delivery.email.summary,
+        },
+        whatsapp: {
+          enabled: appointment.delivery.whatsapp.enabled,
+          destination: appointment.delivery.whatsapp.destination ?? undefined,
+          status: appointment.delivery.whatsapp.status,
+          summary: appointment.delivery.whatsapp.summary,
+        },
+        telegram: {
+          enabled: appointment.delivery.telegram.enabled,
+          destination: appointment.delivery.telegram.destination ?? undefined,
+          status: appointment.delivery.telegram.status,
+          summary: appointment.delivery.telegram.summary,
+        },
+        access: {
+          type: appointment.delivery.access.type,
+          instructions: appointment.delivery.access.instructions,
+          joinUrl: appointment.delivery.access.join_url ?? undefined,
+          location: appointment.delivery.access.location ?? undefined,
+        },
+      } satisfies AppointmentDeliveryPlan)
+    : undefined,
 });
 
 const mapPatient = (patient: PatientResponse): Patient => ({
@@ -260,6 +326,7 @@ const mapPatient = (patient: PatientResponse): Patient => ({
   gender: patient.gender,
   phone: patient.phone,
   email: patient.email,
+  telegramHandle: patient.telegram_handle ?? undefined,
   insurance: patient.insurance,
   lastVisit: patient.last_visit ?? "",
   conditions: patient.conditions,
@@ -350,6 +417,30 @@ export const login = async (payload: LoginInput) => {
     method: "POST",
     auth: false,
     body: payload,
+  });
+
+  return {
+    accessToken: response.access_token,
+    refreshToken: response.refresh_token,
+    expiresIn: response.expires_in,
+    user: response.user,
+  };
+};
+
+export const registerPatient = async (payload: RegisterPatientInput) => {
+  const response = await apiRequest<TokenPairResponse>("/auth/register/patient", {
+    method: "POST",
+    auth: false,
+    body: {
+      full_name: payload.fullName,
+      email: payload.email,
+      password: payload.password,
+      phone: payload.phone,
+      age: payload.age,
+      gender: payload.gender,
+      insurance: payload.insurance,
+      telegram_handle: payload.telegramHandle,
+    },
   });
 
   return {

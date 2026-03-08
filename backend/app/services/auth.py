@@ -1,12 +1,15 @@
 from datetime import timedelta
+from uuid import uuid4
 
+import jwt
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.security import TokenType, create_token, decode_token, hash_password, verify_password
+from app.db.models.patient import PatientProfile
 from app.db.models.refresh_token import RefreshToken
-from app.db.models.user import User
+from app.db.models.user import User, UserRole
 from app.repositories.auth import (
     get_refresh_token,
     get_user_by_email,
@@ -14,7 +17,8 @@ from app.repositories.auth import (
     revoke_refresh_token,
     save_refresh_token,
 )
-from app.schemas.auth import AuthUser, TokenPairResponse
+from app.repositories.patients import get_patient_by_email
+from app.schemas.auth import AuthUser, PatientRegistrationRequest, TokenPairResponse
 
 
 def serialize_user(user: User) -> AuthUser:
@@ -67,6 +71,56 @@ def authenticate_user(
     return create_session_tokens(db, user)
 
 
+def register_patient(db: Session, payload: PatientRegistrationRequest) -> TokenPairResponse:
+    normalized_email = payload.email.lower()
+    existing_user = get_user_by_email(db, normalized_email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ya existe una cuenta registrada con este correo",
+        )
+
+    patient_profile = get_patient_by_email(db, normalized_email)
+    if patient_profile and patient_profile.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ya existe una cuenta de paciente asociada a este correo",
+        )
+
+    user = User(
+        id=str(uuid4()),
+        email=normalized_email,
+        full_name=payload.full_name,
+        role=UserRole.PATIENT,
+        password_hash=hash_password(payload.password),
+        notification_preferences=dict(User.DEFAULT_NOTIFICATION_PREFERENCES),
+    )
+    db.add(user)
+
+    if not patient_profile:
+        patient_profile = PatientProfile(
+            id=f"p-{uuid4()}",
+            last_visit=None,
+            avatar="",
+            conditions=[],
+            allergies=[],
+        )
+        db.add(patient_profile)
+
+    patient_profile.user_id = user.id
+    patient_profile.name = payload.full_name
+    patient_profile.age = payload.age
+    patient_profile.gender = payload.gender
+    patient_profile.phone = payload.phone
+    patient_profile.email = normalized_email
+    patient_profile.telegram_handle = payload.telegram_handle
+    patient_profile.insurance = payload.insurance
+
+    db.commit()
+    db.refresh(user)
+    return create_session_tokens(db, user)
+
+
 def refresh_session(db: Session, user_id: str, refresh_jti: str) -> TokenPairResponse:
     refresh_token = get_refresh_token(db, refresh_jti)
     if (
@@ -87,18 +141,22 @@ def refresh_session(db: Session, user_id: str, refresh_jti: str) -> TokenPairRes
     return create_session_tokens(db, user)
 
 
-def logout_session(db: Session, refresh_token_value: str) -> None:
+def decode_refresh_token(raw_token: str) -> dict:
     try:
-        token_data = decode_token(refresh_token_value)
-    except Exception as exc:  # pragma: no cover - jwt internals
+        token_data = decode_token(raw_token)
+    except jwt.PyJWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido"
         ) from exc
-
     if token_data.get("type") != TokenType.REFRESH.value:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido"
         )
+    return token_data
+
+
+def logout_session(db: Session, refresh_token_value: str) -> None:
+    token_data = decode_refresh_token(refresh_token_value)
 
     refresh_token = get_refresh_token(db, str(token_data["jti"]))
     if not refresh_token or refresh_token.user_id != str(token_data["sub"]):

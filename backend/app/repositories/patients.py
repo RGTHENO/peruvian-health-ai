@@ -14,3 +14,7 @@ def get_patient(db: Session, patient_id: str) -> PatientProfile | None:
 
 def get_patient_by_user_id(db: Session, user_id: str) -> PatientProfile | None:
     return db.scalar(select(PatientProfile).where(PatientProfile.user_id == user_id))
+
+
+def get_patient_by_email(db: Session, email: str) -> PatientProfile | None:
+    return db.scalar(select(PatientProfile).where(PatientProfile.email == email))
