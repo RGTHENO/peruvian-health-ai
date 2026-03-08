@@ -22,6 +22,8 @@ def seed_database(db: Session) -> None:
     settings = get_settings()
     if not settings.seed_demo_data:
         return
+    if settings.environment == "production":
+        return
     if db.scalar(select(User.id).limit(1)):
         return
 

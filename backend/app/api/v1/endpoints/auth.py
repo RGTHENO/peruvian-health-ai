@@ -1,4 +1,6 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.api.deps import CurrentUserDep, SessionDep
 from app.schemas.auth import (
@@ -20,20 +22,24 @@ from app.services.auth import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/login", response_model=TokenPairResponse)
-def login(payload: LoginRequest, db: SessionDep) -> TokenPairResponse:
+@limiter.limit("10/minute")
+def login(payload: LoginRequest, db: SessionDep, request: Request) -> TokenPairResponse:
     return authenticate_user(db, payload.email, payload.password, payload.role)
 
 
 @router.post("/register/patient", response_model=TokenPairResponse)
-def register(payload: PatientRegistrationRequest, db: SessionDep) -> TokenPairResponse:
+@limiter.limit("5/minute")
+def register(payload: PatientRegistrationRequest, db: SessionDep, request: Request) -> TokenPairResponse:
     return register_patient(db, payload)
 
 
 @router.post("/refresh", response_model=TokenPairResponse)
-def refresh(payload: RefreshRequest, db: SessionDep) -> TokenPairResponse:
+@limiter.limit("20/minute")
+def refresh(payload: RefreshRequest, db: SessionDep, request: Request) -> TokenPairResponse:
     token_data = decode_refresh_token(payload.refresh_token)
     return refresh_session(db, str(token_data["sub"]), str(token_data["jti"]))
 
@@ -44,7 +50,7 @@ def me(current_user: CurrentUserDep):
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(payload: LogoutRequest, db: SessionDep):
+def logout(payload: LogoutRequest, db: SessionDep, current_user: CurrentUserDep):
     logout_session(db, payload.refresh_token)
 
 

@@ -19,25 +19,12 @@ class Settings(BaseSettings):
     debug: bool = False
     api_v1_prefix: str = "/api/v1"
     database_url: str = "sqlite+pysqlite:///./saludpe.db"
-    secret_key: str = Field(default="change-this-in-production-32-bytes-minimum", min_length=32)
+    secret_key: str = Field(min_length=32)
     access_token_expire_minutes: int = Field(default=30, ge=5, le=1440)
     refresh_token_expire_days: int = Field(default=30, ge=1, le=365)
-    cors_origins: list[str] = [
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://localhost:8081",
-        "http://127.0.0.1:8081",
-        "http://localhost:8082",
-        "http://127.0.0.1:8082",
-        "http://localhost:4173",
-        "http://127.0.0.1:4173",
-        "http://localhost:4174",
-        "http://127.0.0.1:4174",
-        "http://localhost:4301",
-        "http://127.0.0.1:4301",
-    ]
+    cors_origins: list[str] = []
     frontend_url: str = "http://localhost:8080"
-    seed_demo_data: bool = True
+    seed_demo_data: bool = False
 
 
 @lru_cache

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.deps import CurrentUserDep, DoctorUserDep, PatientUserDep, SessionDep
+from app.db.models.appointment import AppointmentStatus
 from app.schemas.appointment import AppointmentCreateRequest, AppointmentStatusUpdateRequest
 from app.services.appointments import (
     create_new_appointment,
@@ -33,14 +34,14 @@ def patch_appointment_status(
 
 @router.post("/{appointment_id}/confirm")
 def confirm_appointment(appointment_id: str, db: SessionDep, current_user: DoctorUserDep):
-    return update_appointment_status(db, appointment_id, "confirmada", current_user)
+    return update_appointment_status(db, appointment_id, AppointmentStatus.CONFIRMED.value, current_user)
 
 
 @router.post("/{appointment_id}/cancel")
 def cancel_appointment(appointment_id: str, db: SessionDep, current_user: DoctorUserDep):
-    return update_appointment_status(db, appointment_id, "cancelada", current_user)
+    return update_appointment_status(db, appointment_id, AppointmentStatus.CANCELLED.value, current_user)
 
 
 @router.post("/{appointment_id}/complete")
 def complete_appointment(appointment_id: str, db: SessionDep, current_user: DoctorUserDep):
-    return update_appointment_status(db, appointment_id, "completada", current_user)
+    return update_appointment_status(db, appointment_id, AppointmentStatus.COMPLETED.value, current_user)

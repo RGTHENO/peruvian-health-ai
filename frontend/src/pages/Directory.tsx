@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
@@ -10,12 +10,31 @@ import { Search } from "lucide-react";
 import { specialties, insurances } from "@/data/doctors";
 import { fetchDirectoryDoctors } from "@/lib/api";
 
+const SEARCH_DEBOUNCE_MS = 350;
+
 const Directory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("q") || "";
   const specialty = searchParams.get("especialidad") || "all";
   const insurance = searchParams.get("seguro") || "all";
   const modality = searchParams.get("modalidad") || "all";
+
+  const [searchInput, setSearchInput] = useState(search);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    debounceTimer.current = setTimeout(() => {
+      const nextParams = new URLSearchParams(searchParams);
+      if (!searchInput) {
+        nextParams.delete("q");
+      } else {
+        nextParams.set("q", searchInput);
+      }
+      setSearchParams(nextParams, { replace: true });
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(debounceTimer.current);
+  }, [searchInput]);
 
   const updateSearchParam = (key: string, value: string) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -62,8 +81,8 @@ const Directory = () => {
                   aria-label="Buscar por nombre o especialidad"
                   placeholder="Buscar por nombre o especialidad…"
                   className="pl-9"
-                  value={search}
-                  onChange={(e) => updateSearchParam("q", e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                 />
               </div>
               <Select value={specialty} onValueChange={(value) => updateSearchParam("especialidad", value)}>

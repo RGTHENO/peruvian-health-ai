@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.db.models.notification import Notification
@@ -64,12 +65,15 @@ def mark_notification_as_read(db: Session, user: User, notification_id: str) -> 
 
 
 def mark_all_notifications_as_read(db: Session, user: User) -> list[NotificationResponse]:
-    notifications = list_notifications_for_user(db, user.id)
-    for notification in notifications:
-        notification.read = True
-        db.add(notification)
+    db.execute(
+        update(Notification)
+        .where(Notification.user_id == user.id, Notification.read == False)  # noqa: E712
+        .values(read=True)
+    )
     db.commit()
-    return [_serialize_notification(item) for item in notifications]
+    return [
+        _serialize_notification(item) for item in list_notifications_for_user(db, user.id)
+    ]
 
 
 def dismiss_notification(db: Session, user: User, notification_id: str) -> None:

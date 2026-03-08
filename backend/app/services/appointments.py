@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import time
 from uuid import uuid4
 
 from fastapi import HTTPException, status
@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 from app.db.models.appointment import Appointment, AppointmentStatus, AppointmentType
 from app.db.models.notification import Notification, NotificationType
 from app.db.models.user import User, UserRole
-from app.repositories.appointments import create_appointment, get_appointment, list_appointments
+from app.repositories.appointments import (
+    get_appointment,
+    list_appointments,
+    list_appointments_for_doctor,
+    list_appointments_for_patient,
+)
 from app.repositories.doctors import get_doctor, get_doctor_by_user_id
 from app.repositories.patients import get_patient, get_patient_by_user_id
 from app.schemas.appointment import AppointmentCreateRequest
@@ -15,7 +20,6 @@ from app.services.serializers import format_time, serialize_appointment
 
 
 def list_user_appointments(db: Session, user: User):
-    appointments = list_appointments(db)
     if user.role == UserRole.DOCTOR:
         doctor = get_doctor_by_user_id(db, user.id)
         if not doctor:
@@ -23,9 +27,7 @@ def list_user_appointments(db: Session, user: User):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Perfil médico no encontrado",
             )
-        appointments = [
-            appointment for appointment in appointments if appointment.doctor_id == doctor.id
-        ]
+        appointments = list_appointments_for_doctor(db, doctor.id)
     elif user.role == UserRole.PATIENT:
         patient = get_patient_by_user_id(db, user.id)
         if not patient:
@@ -33,9 +35,9 @@ def list_user_appointments(db: Session, user: User):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Perfil de paciente no encontrado",
             )
-        appointments = [
-            appointment for appointment in appointments if appointment.patient_id == patient.id
-        ]
+        appointments = list_appointments_for_patient(db, patient.id)
+    else:
+        appointments = list_appointments(db)
 
     return [serialize_appointment(appointment) for appointment in appointments]
 
@@ -64,7 +66,7 @@ def create_new_appointment(db: Session, payload: AppointmentCreateRequest, user:
         id=f"apt-{uuid4()}",
         doctor_id=payload.doctor_id,
         patient_id=patient_id,
-        date=date.fromisoformat(payload.date),
+        date=payload.date,
         time=time.fromisoformat(f"{payload.time}:00"),
         duration=payload.duration,
         type=AppointmentType(payload.type),
@@ -72,7 +74,7 @@ def create_new_appointment(db: Session, payload: AppointmentCreateRequest, user:
         reason=payload.reason,
         notes=payload.notes,
     )
-    saved_appointment = create_appointment(db, appointment)
+    db.add(appointment)
 
     if doctor.user_id:
         db.add(
@@ -83,15 +85,16 @@ def create_new_appointment(db: Session, payload: AppointmentCreateRequest, user:
                 title="Nueva cita agendada",
                 message=(
                     f"{patient.name} agendó una consulta para el "
-                    f"{saved_appointment.date} a las {format_time(saved_appointment.time)}."
+                    f"{appointment.date} a las {format_time(appointment.time)}."
                 ),
                 link="/doctor/portal/agenda",
                 read=False,
             )
         )
-        db.commit()
 
-    return serialize_appointment(saved_appointment)
+    db.commit()
+    db.refresh(appointment)
+    return serialize_appointment(appointment)
 
 
 def update_appointment_status(db: Session, appointment_id: str, next_status: str, user: User):

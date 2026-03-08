@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import jwt
@@ -127,6 +127,7 @@ def refresh_session(db: Session, user_id: str, refresh_jti: str) -> TokenPairRes
         not refresh_token
         or refresh_token.user_id != user_id
         or refresh_token.revoked_at is not None
+        or refresh_token.expires_at < datetime.now(UTC)
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido"

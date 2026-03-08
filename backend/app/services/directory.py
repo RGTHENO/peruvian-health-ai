@@ -3,9 +3,11 @@ from datetime import date, timedelta
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.repositories.doctors import get_doctor, list_doctors
+from app.repositories.doctors import get_doctor, search_doctors_filtered
 from app.schemas.doctor import DirectoryResponse, DoctorAvailabilitySlot
 from app.services.serializers import serialize_doctor
+
+DEFAULT_AVAILABILITY_SLOTS = ["09:00", "10:00", "11:00", "16:00"]
 
 
 def search_doctors(
@@ -16,15 +18,10 @@ def search_doctors(
     seguro: str | None = None,
     modalidad: str | None = None,
 ) -> DirectoryResponse:
-    doctors = list_doctors(db)
-    query = (q or "").strip().lower()
+    doctors = search_doctors_filtered(db, q=q, specialty=especialidad)
 
     filtered = []
     for doctor in doctors:
-        if query and query not in doctor.name.lower() and query not in doctor.specialty.lower():
-            continue
-        if especialidad and doctor.specialty != especialidad:
-            continue
         if seguro and seguro not in doctor.insurances:
             continue
         if modalidad and modalidad not in doctor.modalities:
@@ -50,8 +47,9 @@ def get_doctor_availability(db: Session, doctor_id: str) -> list[DoctorAvailabil
         return []
 
     today = date.today()
-    base_slots = ["09:00", "10:00", "11:00", "16:00"]
     return [
-        DoctorAvailabilitySlot(date=(today + timedelta(days=index)).isoformat(), slots=base_slots)
+        DoctorAvailabilitySlot(
+            date=(today + timedelta(days=index)).isoformat(), slots=DEFAULT_AVAILABILITY_SLOTS
+        )
         for index in range(1, 6)
     ]

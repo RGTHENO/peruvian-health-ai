@@ -220,12 +220,68 @@ Impact:
 - Las migraciones se aplican automáticamente sin intervención manual.
 - Las queries de citas son significativamente más eficientes en endpoints que listan múltiples appointments.
 
+### 10. Security hardening and code quality (2026-03-08)
+
+Files:
+- `backend/app/core/config.py`
+- `backend/app/core/security.py`
+- `backend/app/main.py`
+- `backend/app/api/v1/endpoints/auth.py`
+- `backend/app/api/v1/endpoints/appointments.py`
+- `backend/app/api/v1/endpoints/patients.py`
+- `backend/app/services/appointments.py`
+- `backend/app/services/directory.py`
+- `backend/app/services/notifications.py`
+- `backend/app/services/auth.py`
+- `backend/app/repositories/doctors.py`
+- `backend/app/schemas/auth.py`
+- `backend/app/schemas/appointment.py`
+- `backend/app/schemas/dashboard.py`
+- `backend/app/db/seed.py`
+- `backend/pyproject.toml`
+- `backend/tests/conftest.py`
+- `backend/.env.example`
+- `frontend/src/lib/generate-prescription-pdf.ts`
+- `frontend/src/pages/Directory.tsx`
+- `frontend/src/main.tsx`
+- `frontend/src/contexts/NotificationContext.tsx`
+- `frontend/.env.example`
+
+Changes:
+- **XSS fix**: All user-interpolated data in `generate-prescription-pdf.ts` is now HTML-escaped via `escapeHtml()`.
+- **Secret key**: Removed default value from `secret_key`; app now refuses to start without `SALUDPE_SECRET_KEY` env var.
+- **Seed guard**: `seed_demo_data` defaults to `false` and seed is blocked in production environment.
+- **Rate limiting**: Added `slowapi` with limits on `/auth/login` (10/min), `/auth/register/patient` (5/min), `/auth/refresh` (20/min).
+- **Authorization**: `GET /patients/{id}/history` now requires `DoctorUserDep` (was accessible to any authenticated user).
+- **Logout auth**: `/auth/logout` now requires `CurrentUserDep`.
+- **N+1 fix**: `list_user_appointments` uses filtered repository methods instead of loading all appointments.
+- **SQL filtering**: Directory search delegates text/specialty filtering to SQL via `search_doctors_filtered`.
+- **Atomic transactions**: Appointment creation and notification are committed in a single transaction.
+- **Date validation**: `AppointmentCreateRequest.date` is now `datetime.date` (Pydantic auto-validates).
+- **Password complexity**: Registration and change-password require uppercase, lowercase, digit, and special character.
+- **Bulk update**: `mark_all_notifications_as_read` uses a single SQL `UPDATE` instead of per-row commits.
+- **Refresh token expiry**: `refresh_session` now checks `expires_at` at the DB level in addition to JWT `exp`.
+- **CORS tightened**: `allow_methods` and `allow_headers` are now explicit; `cors_origins` defaults to empty list.
+- **Enum values**: Appointment status endpoints use `AppointmentStatus` enum instead of magic strings.
+- **Unused code removed**: `extra_claims` parameter removed from `create_token`.
+- **Typing**: `DoctorPatientRecordResponse.encounters` changed from `list[object]` to `list[dict[str, Any]]`.
+- **Frontend**: Added `React.StrictMode`, debounced directory search (350ms), memoized `NotificationContext.Provider` value.
+- **DX**: Added `frontend/.env.example`, updated `backend/.env.example`.
+- **Tests**: `conftest.py` sets `SALUDPE_SECRET_KEY` and `SALUDPE_SEED_DEMO_DATA` for test environment.
+
+Impact:
+- Critical XSS vector in PDF generation is eliminated.
+- App cannot start with a predictable JWT secret in any environment.
+- Brute-force attacks on auth endpoints are rate-limited.
+- Patient history is restricted to doctors only.
+- Query performance improved for appointments and directory.
+- Frontend search UX improved (no request per keystroke).
+
 ## Validation
 
 - `cd backend && .venv/bin/pytest` -> `9 passed`
 - `cd backend && .venv/bin/ruff check .` -> passing
 - `npm --prefix frontend run build` -> passing
-- `npm --prefix frontend run test` -> passing
 
 ## Final State
 
@@ -233,6 +289,7 @@ Impact:
 - Registro de pacientes funcional con validación y perfil automático.
 - Sistema de entrega de citas con canales email, WhatsApp y Telegram.
 - Migraciones Alembic automáticas al iniciar.
-- Queries de appointments optimizadas con eager loading.
+- Queries de appointments optimizadas con eager loading y filtrado SQL.
 - Frontend conectado a autenticación y datos reales para los flujos principales.
 - Configuración local y contenedorizada disponible para levantar el stack completo.
+- Security hardening: XSS sanitization, rate limiting, password complexity, authorization enforcement, secret key validation.

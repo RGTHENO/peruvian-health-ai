@@ -166,20 +166,33 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [preferences, savePreferencesMutation],
   );
 
+  const value = useMemo<NotificationContextValue>(
+    () => ({
+      notifications,
+      filteredNotifications,
+      preferences,
+      unreadCount,
+      markAsRead,
+      markAllAsRead: handleMarkAllAsRead,
+      dismissNotification: handleDismiss,
+      setPreferences,
+      savePreferences,
+    }),
+    [
+      notifications,
+      filteredNotifications,
+      preferences,
+      unreadCount,
+      markAsRead,
+      handleMarkAllAsRead,
+      handleDismiss,
+      setPreferences,
+      savePreferences,
+    ],
+  );
+
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        filteredNotifications,
-        preferences,
-        unreadCount,
-        markAsRead,
-        markAllAsRead: handleMarkAllAsRead,
-        dismissNotification: handleDismiss,
-        setPreferences,
-        savePreferences,
-      }}
-    >
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );

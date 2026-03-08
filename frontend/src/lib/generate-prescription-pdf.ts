@@ -1,32 +1,48 @@
 import type { ConsultationEncounter } from "@/data/encounters";
 import type { Patient } from "@/data/appointments";
 
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export function generatePrescriptionPdf(encounter: ConsultationEncounter, patient?: Patient) {
-  const patientName = patient?.name || "Paciente";
-  const patientAge = patient ? `${patient.age} años` : "";
-  const patientInsurance = patient?.insurance || "";
-  const patientAllergies = patient?.allergies?.join(", ") || "Ninguna conocida";
+  const patientName = escapeHtml(patient?.name || "Paciente");
+  const patientAge = patient ? escapeHtml(`${patient.age} años`) : "";
+  const patientInsurance = escapeHtml(patient?.insurance || "");
+  const patientAllergies = escapeHtml(patient?.allergies?.join(", ") || "Ninguna conocida");
 
   const prescriptionRows = encounter.prescriptions
     .map(
       (rx, i) => `
       <tr>
         <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${i + 1}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;font-weight:600;">${rx.medication}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${rx.dosage}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${rx.frequency}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${rx.duration}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;font-weight:600;">${escapeHtml(rx.medication)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${escapeHtml(rx.dosage)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${escapeHtml(rx.frequency)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${escapeHtml(rx.duration)}</td>
       </tr>`
     )
     .join("");
 
   const recommendationsList = encounter.recommendations
-    .map((r) => `<li style="margin-bottom:4px;font-size:13px;">${r}</li>`)
+    .map((r) => `<li style="margin-bottom:4px;font-size:13px;">${escapeHtml(r)}</li>`)
     .join("");
 
   const labOrdersList = encounter.labOrders
-    .map((o) => `<li style="margin-bottom:4px;font-size:13px;">${o}</li>`)
+    .map((o) => `<li style="margin-bottom:4px;font-size:13px;">${escapeHtml(o)}</li>`)
     .join("");
+
+  const doctorName = escapeHtml(encounter.doctor);
+  const specialtyName = escapeHtml(encounter.specialty);
+  const diagnosisText = escapeHtml(encounter.diagnosis);
+  const diagnosisStatusText = escapeHtml(encounter.diagnosisStatus);
+  const dateText = escapeHtml(encounter.date);
+  const notesText = encounter.notes ? escapeHtml(encounter.notes) : "";
 
   const html = `
     <!DOCTYPE html>
@@ -156,12 +172,12 @@ export function generatePrescriptionPdf(encounter: ConsultationEncounter, patien
     <body>
       <div class="header">
         <div class="logo-area">
-          <h1>🩺 SaludPe</h1>
+          <h1>SaludPe</h1>
           <p>Receta Médica</p>
         </div>
         <div class="doc-info">
-          <strong>${encounter.doctor}</strong>
-          ${encounter.specialty}<br/>
+          <strong>${doctorName}</strong>
+          ${specialtyName}<br/>
           CMP: XXXXX · RNE: XXXXX
         </div>
       </div>
@@ -169,12 +185,12 @@ export function generatePrescriptionPdf(encounter: ConsultationEncounter, patien
       <div class="patient-box">
         <div><span class="label">Paciente</span><br/><span class="value">${patientName}</span></div>
         <div><span class="label">Edad</span><br/><span class="value">${patientAge}</span></div>
-        <div><span class="label">Diagnóstico</span><br/><span class="value">${encounter.diagnosis} (${encounter.diagnosisStatus})</span></div>
+        <div><span class="label">Diagnóstico</span><br/><span class="value">${diagnosisText} (${diagnosisStatusText})</span></div>
         <div><span class="label">Seguro</span><br/><span class="value">${patientInsurance || "Particular"}</span></div>
-        <div><span class="label">Fecha</span><br/><span class="value">${encounter.date}</span></div>
+        <div><span class="label">Fecha</span><br/><span class="value">${dateText}</span></div>
       </div>
 
-      ${patientAllergies !== "Ninguna conocida" ? `<div class="allergy-alert">⚠️ <strong>Alergias:</strong> ${patientAllergies}</div>` : ""}
+      ${patientAllergies !== "Ninguna conocida" ? `<div class="allergy-alert"><strong>Alergias:</strong> ${patientAllergies}</div>` : ""}
 
       ${encounter.prescriptions.length > 0 ? `
         <div class="section-title">Medicamentos</div>
@@ -202,23 +218,23 @@ export function generatePrescriptionPdf(encounter: ConsultationEncounter, patien
         <ul style="padding-left:20px;">${labOrdersList}</ul>
       ` : ""}
 
-      ${encounter.notes ? `
+      ${notesText ? `
         <div class="section-title">Observaciones</div>
-        <p style="font-size:13px;color:#374151;">${encounter.notes}</p>
+        <p style="font-size:13px;color:#374151;">${notesText}</p>
       ` : ""}
 
       <div class="signature">
         <div class="signature-line"></div>
-        <p style="font-weight:600;">${encounter.doctor}</p>
-        <p style="color:#6b7280;">${encounter.specialty}</p>
+        <p style="font-weight:600;">${doctorName}</p>
+        <p style="color:#6b7280;">${specialtyName}</p>
       </div>
 
       <div class="footer">
-        <span>Documento generado por SaludPe · ${encounter.date}</span>
+        <span>Documento generado por SaludPe · ${dateText}</span>
         <span>Este documento es una receta médica válida</span>
       </div>
 
-      <button class="print-btn no-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+      <button class="print-btn no-print" onclick="window.print()">Imprimir / Guardar PDF</button>
     </body>
     </html>
   `;

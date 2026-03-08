@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 from app.schemas.appointment import AppointmentSummary
@@ -23,4 +25,4 @@ class DoctorDashboardResponse(BaseModel):
 class DoctorPatientRecordResponse(BaseModel):
     patient: PatientDetail
     upcoming_appointments: list[AppointmentSummary]
-    encounters: list[object]
+    encounters: list[dict[str, Any]]

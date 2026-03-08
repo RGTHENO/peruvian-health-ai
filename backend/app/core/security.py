@@ -30,7 +30,6 @@ def create_token(
     role: str,
     token_type: TokenType,
     expires_delta: timedelta,
-    extra_claims: dict[str, Any] | None = None,
 ) -> tuple[str, str, datetime]:
     settings = get_settings()
     now = datetime.now(UTC)
@@ -44,8 +43,6 @@ def create_token(
         "iat": int(now.timestamp()),
         "exp": int(expires_at.timestamp()),
     }
-    if extra_claims:
-        payload.update(extra_claims)
 
     token = jwt.encode(payload, settings.secret_key, algorithm="HS256")
     return token, jti, expires_at
