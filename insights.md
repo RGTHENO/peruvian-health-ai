@@ -293,3 +293,51 @@ Impact:
 - Frontend conectado a autenticación y datos reales para los flujos principales.
 - Configuración local y contenedorizada disponible para levantar el stack completo.
 - Security hardening: XSS sanitization, rate limiting, password complexity, authorization enforcement, secret key validation.
+
+## Update 2026-03-11
+
+## Summary
+
+La iteración del 2026-03-11 refina el acceso del frontend para que el flujo de autenticación sea más claro, más robusto ante renderizados diferidos y menos redundante en navegación.
+
+- la página de login fue rediseñada para separar mejor inicio de sesión y registro
+- los campos de contraseña ahora permiten mostrar/ocultar contenido y exponen una vía explícita de recuperación futura
+- el navbar evita ofrecer "Iniciar Sesión" cuando el usuario ya está dentro de esa misma ruta
+- `useScrollReveal` dejó de depender de un `ref.current` fijo y ahora soporta nodos montados después del primer render, con test dedicado
+- se ignoraron artefactos locales de ejecución (`.run/`) para no contaminar commits
+
+## Scope Of Changes
+
+### 12. Login UX refinement and auth flow clarity
+
+Files:
+- `frontend/src/pages/Login.tsx`
+- `frontend/src/components/Navbar.tsx`
+
+Changes:
+- Se separó el estado de modo (`login` vs `registro`) del estado de rol (`paciente` vs `medico`) para que la UI refleje correctamente parámetros de ruta y cambios de pestaña.
+- La vista de acceso recibió una jerarquía visual más clara, campos consistentes, CTA diferenciadas y mensajes específicos para retomar reservas.
+- Se añadieron controles para mostrar u ocultar contraseña en login y registro, con atributos accesibles (`aria-label`, `aria-pressed`).
+- El login médico quedó enfocado solo en acceso existente, mientras que el alta online se mantiene explícitamente solo para pacientes.
+- Se agregó un aviso de "olvidaste tu contraseña" que hoy informa el estado del flujo según entorno.
+- El navbar ahora detecta la ruta actual y oculta la acción de login cuando ya se está en `/iniciar-sesion`.
+
+Impact:
+- Menos fricción y menos ruido visual en el flujo de autenticación.
+- Menor riesgo de estados inconsistentes al entrar con query params de rol o modo.
+- La navegación principal evita CTA redundantes.
+
+### 13. Scroll reveal hook resilience
+
+Files:
+- `frontend/src/hooks/use-scroll-reveal.tsx`
+- `frontend/src/test/use-scroll-reveal.test.tsx`
+
+Changes:
+- El hook fue reescrito para usar un callback ref tipado en lugar de leer una referencia fija durante el primer efecto.
+- El `IntersectionObserver` ahora se registra contra el nodo actual y reacciona cuando el elemento aparece más tarde en el ciclo de vida.
+- Se añadió una prueba con Vitest/Testing Library para cubrir el caso de un elemento revelado después del render inicial.
+
+Impact:
+- Se corrige el fallo en componentes cuyo contenido animado aparece de forma condicional o diferida.
+- El comportamiento queda protegido frente a regresiones con cobertura automatizada.

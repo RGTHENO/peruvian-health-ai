@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Heart, CalendarCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { pathname } = useLocation();
+  const showLoginAction = !user && pathname !== "/iniciar-sesion";
 
   const primaryLink =
     user?.role === "doctor"
@@ -39,11 +41,11 @@ const Navbar = () => {
               <Button size="sm" variant="outline" onClick={() => void logout()}>
                 Cerrar Sesión
               </Button>
-            ) : (
+            ) : showLoginAction ? (
               <Button asChild size="sm" variant="outline">
                 <Link to="/iniciar-sesion">Iniciar Sesión</Link>
               </Button>
-            )}
+            ) : null}
           </div>
 
           <div className="md:hidden">
@@ -80,13 +82,13 @@ const Navbar = () => {
                   >
                     Cerrar Sesión
                   </Button>
-                ) : (
+                ) : showLoginAction ? (
                   <Button asChild size="sm" variant="outline" className="h-11 w-full px-3">
                     <Link to="/iniciar-sesion" onClick={() => setIsOpen(false)} className="min-w-0">
                       Iniciar Sesión
                     </Link>
                   </Button>
-                )}
+                ) : null}
               </div>
             </div>
           </div>

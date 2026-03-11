@@ -1,30 +1,32 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-export function useScrollReveal() {
-  const ref = useRef<HTMLDivElement>(null);
+export function useScrollReveal<T extends HTMLElement = HTMLDivElement>() {
+  const [node, setNode] = useState<T | null>(null);
+  const ref = useCallback((element: T | null) => {
+    setNode(element);
+  }, []);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    if (!node) return;
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.classList.add("revealed");
+      node.classList.add("revealed");
       return;
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          el.classList.add("revealed");
-          observer.unobserve(el);
+          node.classList.add("revealed");
+          observer.unobserve(node);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
-    observer.observe(el);
+    observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [node]);
 
   return ref;
 }

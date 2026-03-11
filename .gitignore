@@ -21,6 +21,8 @@ __pycache__/
 *.pyc
 *.db
 *.egg-info/
+.env
+.run/
 
 # Editor directories and files
 .vscode/*
