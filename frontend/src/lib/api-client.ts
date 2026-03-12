@@ -8,15 +8,33 @@ const LOCAL_API_BASE_URL = "http://127.0.0.1:8000/api/v1";
 
 const resolveApiBaseUrl = () => {
   const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "");
-  if (envUrl) return envUrl;
+  const isHostedBrowser =
+    typeof window !== "undefined" &&
+    window.location.hostname !== "localhost" &&
+    window.location.hostname !== "127.0.0.1";
+
+  if (envUrl) {
+    if (!isHostedBrowser) return envUrl;
+
+    try {
+      const parsed = new URL(envUrl, window.location.origin);
+      const isLoopback =
+        parsed.hostname === "localhost" ||
+        parsed.hostname === "127.0.0.1" ||
+        parsed.hostname === "::1";
+
+      if (!isLoopback) return envUrl;
+    } catch {
+      if (!envUrl.startsWith("http://") && !envUrl.startsWith("https://")) {
+        return envUrl;
+      }
+    }
+  }
 
   // Hosted builds should use same-origin `/api/v1` so Vercel can proxy requests
-  // to the current backend tunnel without baking an ephemeral URL into the bundle.
-  if (typeof window !== "undefined") {
-    const { hostname } = window.location;
-    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-      return "/api/v1";
-    }
+  // to the current backend tunnel without baking a local-only URL into the bundle.
+  if (isHostedBrowser) {
+    return "/api/v1";
   }
 
   return LOCAL_API_BASE_URL;
