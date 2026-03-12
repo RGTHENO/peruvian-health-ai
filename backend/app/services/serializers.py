@@ -25,6 +25,29 @@ def format_time(value: time) -> str:
     return value.strftime("%H:%M")
 
 
+def resolve_doctor_avatar(doctor: DoctorProfile) -> str:
+    if doctor.avatar.strip():
+        return doctor.avatar
+
+    avatar_by_id = {
+        "1": "/doctor-avatars/doctora_mujer2.jpg",
+        "2": "/doctor-avatars/doctor_hombre2.jpg",
+        "3": "/doctor-avatars/doctora_mujer1.jpg",
+        "4": "/doctor-avatars/doctor_hombre1.jpg",
+        "5": "/doctor-avatars/doctora_mujer3.jpg",
+        "6": "/doctor-avatars/doctor_hombre3.jpg",
+    }
+
+    if doctor.id in avatar_by_id:
+        return avatar_by_id[doctor.id]
+
+    return (
+        "/doctor-avatars/doctora_mujer1.jpg"
+        if doctor.name.startswith("Dra.")
+        else "/doctor-avatars/doctor_hombre1.jpg"
+    )
+
+
 def serialize_doctor(doctor: DoctorProfile) -> DoctorSummary:
     return DoctorSummary(
         id=doctor.id,
@@ -41,7 +64,7 @@ def serialize_doctor(doctor: DoctorProfile) -> DoctorSummary:
         languages=doctor.languages,
         bio=doctor.bio,
         experience=doctor.experience,
-        avatar=doctor.avatar,
+        avatar=resolve_doctor_avatar(doctor),
     )
 
 

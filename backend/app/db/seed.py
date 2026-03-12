@@ -81,7 +81,7 @@ def seed_database(db: Session) -> None:
             bio="Cardióloga con 15 años de experiencia en el Instituto Nacional Cardiovascular.",
             experience=15,
             phone="+51 999 888 777",
-            avatar="",
+            avatar="/doctor-avatars/doctora_mujer2.jpg",
         ),
         DoctorProfile(
             id="2",
@@ -99,7 +99,7 @@ def seed_database(db: Session) -> None:
             bio="Médico general dedicado a la atención primaria con enfoque preventivo.",
             experience=10,
             phone="+51 944 111 222",
-            avatar="",
+            avatar="/doctor-avatars/doctor_hombre2.jpg",
         ),
         DoctorProfile(
             id="3",
@@ -117,7 +117,7 @@ def seed_database(db: Session) -> None:
             bio="Dermatóloga certificada con subespecialidad en dermatología estética y oncológica.",
             experience=12,
             phone="+51 955 222 333",
-            avatar="",
+            avatar="/doctor-avatars/doctora_mujer1.jpg",
         ),
         DoctorProfile(
             id="4",
@@ -135,7 +135,7 @@ def seed_database(db: Session) -> None:
             bio="Pediatra con amplia experiencia en neonatología y desarrollo infantil.",
             experience=18,
             phone="+51 966 333 444",
-            avatar="",
+            avatar="/doctor-avatars/doctor_hombre1.jpg",
         ),
         DoctorProfile(
             id="5",
@@ -153,7 +153,7 @@ def seed_database(db: Session) -> None:
             bio="Ginecóloga obstetra especializada en salud reproductiva y embarazo de alto riesgo.",
             experience=20,
             phone="+51 977 444 555",
-            avatar="",
+            avatar="/doctor-avatars/doctora_mujer3.jpg",
         ),
         DoctorProfile(
             id="6",
@@ -171,7 +171,7 @@ def seed_database(db: Session) -> None:
             bio="Neurólogo con experiencia en epilepsia y trastornos del sueño.",
             experience=14,
             phone="+51 988 555 666",
-            avatar="",
+            avatar="/doctor-avatars/doctor_hombre3.jpg",
         ),
     ]
     db.add_all(doctors)

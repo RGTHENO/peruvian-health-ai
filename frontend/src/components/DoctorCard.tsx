@@ -3,8 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, MapPin, Video, Building2, ArrowRight } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Doctor } from "@/data/doctors";
+import { getDoctorAvatarUrl } from "@/lib/doctor-avatar";
 
 const DoctorCard = ({ doctor }: { doctor: Doctor }) => {
   const ctaLabel = doctor.available ? "Ver horarios" : "Ver perfil";
@@ -19,6 +20,11 @@ const DoctorCard = ({ doctor }: { doctor: Doctor }) => {
       <CardContent className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row">
           <Avatar className="h-14 w-14 border-2 border-primary/20">
+            <AvatarImage
+              src={getDoctorAvatarUrl(doctor)}
+              alt={`Foto de perfil de ${doctor.name}`}
+              className="object-cover object-center"
+            />
             <AvatarFallback className="bg-accent text-accent-foreground font-semibold">
               {initials}
             </AvatarFallback>

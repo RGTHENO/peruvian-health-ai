@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +46,7 @@ import {
   fetchDoctorAvailability,
   fetchDoctorDetail,
 } from "@/lib/api";
+import { getDoctorAvatarUrl } from "@/lib/doctor-avatar";
 
 const DoctorProfile = () => {
   const { id } = useParams();
@@ -259,6 +260,11 @@ const DoctorProfile = () => {
               <CardContent className="p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:gap-5">
                   <Avatar className="h-20 w-20 border-2 border-primary/20">
+                    <AvatarImage
+                      src={getDoctorAvatarUrl(doctor)}
+                      alt={`Foto de perfil de ${doctor.name}`}
+                      className="object-cover object-center"
+                    />
                     <AvatarFallback className="bg-accent text-accent-foreground text-xl font-semibold">
                       {initials}
                     </AvatarFallback>

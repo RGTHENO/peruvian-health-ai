@@ -45,7 +45,7 @@ export const doctors: Doctor[] = [
     languages: ["Español", "Quechua"],
     bio: "Cardióloga con 15 años de experiencia en el Instituto Nacional Cardiovascular. Especialista en ecocardiografía y prevención cardiovascular.",
     experience: 15,
-    avatar: "",
+    avatar: "/doctor-avatars/doctora_mujer2.jpg",
   },
   {
     id: "2",
@@ -62,7 +62,7 @@ export const doctors: Doctor[] = [
     languages: ["Español"],
     bio: "Médico general dedicado a la atención primaria con enfoque preventivo. Atención integral para toda la familia.",
     experience: 10,
-    avatar: "",
+    avatar: "/doctor-avatars/doctor_hombre2.jpg",
   },
   {
     id: "3",
@@ -79,7 +79,7 @@ export const doctors: Doctor[] = [
     languages: ["Español", "Inglés"],
     bio: "Dermatóloga certificada con subespecialidad en dermatología estética y oncológica. Formación en Brasil y España.",
     experience: 12,
-    avatar: "",
+    avatar: "/doctor-avatars/doctora_mujer1.jpg",
   },
   {
     id: "4",
@@ -96,7 +96,7 @@ export const doctors: Doctor[] = [
     languages: ["Español", "Inglés"],
     bio: "Pediatra con amplia experiencia en neonatología y desarrollo infantil. Atención cálida y personalizada para los más pequeños.",
     experience: 18,
-    avatar: "",
+    avatar: "/doctor-avatars/doctor_hombre1.jpg",
   },
   {
     id: "5",
@@ -113,7 +113,7 @@ export const doctors: Doctor[] = [
     languages: ["Español", "Quechua", "Inglés"],
     bio: "Ginecóloga obstetra especializada en salud reproductiva y embarazo de alto riesgo. Comprometida con la salud de la mujer peruana.",
     experience: 20,
-    avatar: "",
+    avatar: "/doctor-avatars/doctora_mujer3.jpg",
   },
   {
     id: "6",
@@ -130,6 +130,6 @@ export const doctors: Doctor[] = [
     languages: ["Español", "Inglés"],
     bio: "Neurólogo con experiencia en epilepsia y trastornos del sueño. Investigador asociado en neurociencias.",
     experience: 14,
-    avatar: "",
+    avatar: "/doctor-avatars/doctor_hombre3.jpg",
   },
 ];
