@@ -4,9 +4,25 @@ import {
   type AuthSession,
 } from "@/lib/auth-session";
 
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
-  "http://127.0.0.1:8000/api/v1";
+const LOCAL_API_BASE_URL = "http://127.0.0.1:8000/api/v1";
+
+const resolveApiBaseUrl = () => {
+  const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "");
+  if (envUrl) return envUrl;
+
+  // Hosted builds should use same-origin `/api/v1` so Vercel can proxy requests
+  // to the current backend tunnel without baking an ephemeral URL into the bundle.
+  if (typeof window !== "undefined") {
+    const { hostname } = window.location;
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+      return "/api/v1";
+    }
+  }
+
+  return LOCAL_API_BASE_URL;
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export class ApiError extends Error {
   status: number;
