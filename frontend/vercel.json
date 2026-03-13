@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "https://operator-soviet-subjects-retail.trycloudflare.com/api/v1/:path*"
+      "destination": "https://americans-ocean-novels-names.trycloudflare.com/api/v1/:path*"
     },
     {
       "source": "/(.*)",

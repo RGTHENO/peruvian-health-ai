@@ -6,7 +6,7 @@ BACKEND_FASTAPI := $(BACKEND_VENV)/bin/fastapi
 BACKEND_PYTEST := $(BACKEND_VENV)/bin/pytest
 BACKEND_RUFF := $(BACKEND_VENV)/bin/ruff
 
-.PHONY: backend-install backend-dev backend-test backend-lint frontend-install frontend-dev frontend-build frontend-test dev
+.PHONY: backend-install backend-dev backend-test backend-lint frontend-install frontend-dev frontend-build frontend-test tunnel-sync dev
 
 backend-install:
 	$(PYTHON) -m venv $(BACKEND_VENV)
@@ -32,6 +32,9 @@ frontend-build:
 
 frontend-test:
 	npm --prefix frontend run test
+
+tunnel-sync:
+	./scripts/update_vercel_tunnel_url.sh "$(URL)"
 
 dev:
 	docker compose up --build

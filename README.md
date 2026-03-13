@@ -41,6 +41,22 @@ cd backend
 ../backend/.venv/bin/fastapi dev --host 0.0.0.0 --port 8000
 ```
 
+### Backend por tunnel de Cloudflare
+
+```bash
+cd backend
+../backend/.venv/bin/fastapi run --host 0.0.0.0 --port 8011
+```
+
+En otra terminal:
+
+```bash
+cloudflared tunnel --url http://127.0.0.1:8011 --no-autoupdate
+make tunnel-sync URL=https://<nuevo-subdominio>.trycloudflare.com
+```
+
+Nota: los `quick tunnels` de `trycloudflare.com` son efimeros. Para un hostname estable hace falta autenticar Cloudflare y crear un named tunnel.
+
 ### Monorepo completo
 
 ```bash
@@ -68,4 +84,4 @@ docker compose up --build
 - frontend movido a `frontend/`
 - backend FastAPI operativo con seeds, auth, directorio, agenda, pacientes e historial
 - tests backend incluidos
-
+- rewrites de Vercel apuntando al backend via Cloudflare Tunnel
