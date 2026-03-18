@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "https://ease-nations-geology-tracker.trycloudflare.com/api/v1/:path*"
+      "destination": "https://distributors-erik-especially-gas.trycloudflare.com/api/v1/:path*"
     },
     {
       "source": "/(.*)",
