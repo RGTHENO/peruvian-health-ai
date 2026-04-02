@@ -9,6 +9,12 @@ import type {
   SurgeryEncounter,
 } from "@/data/encounters";
 import { apiRequest } from "@/lib/api-client";
+import {
+  getFallbackDirectoryResponse,
+  getFallbackDoctorDetail,
+  isPublicDirectoryFallbackEnabled,
+  type PublicDirectorySearchParams,
+} from "@/lib/public-directory-fallback";
 
 export interface AuthUser {
   id: string;
@@ -208,12 +214,7 @@ interface RegisterPatientInput {
   telegramHandle?: string;
 }
 
-interface DirectorySearchParams {
-  q?: string;
-  especialidad?: string;
-  seguro?: string;
-  modalidad?: string;
-}
+type DirectorySearchParams = PublicDirectorySearchParams;
 
 interface CreateAppointmentInput {
   doctorId: string;
@@ -478,21 +479,58 @@ export const fetchDirectoryDoctors = async (params: DirectorySearchParams) => {
     if (value) searchParams.set(key, value);
   });
 
-  const response = await apiRequest<DirectoryResponse>(
-    `/directory/doctors${searchParams.toString() ? `?${searchParams.toString()}` : ""}`,
-    { auth: false },
-  );
+  try {
+    return await apiRequest<DirectoryResponse>(
+      `/directory/doctors${searchParams.toString() ? `?${searchParams.toString()}` : ""}`,
+      { auth: false },
+    );
+  } catch (error) {
+    if (!isPublicDirectoryFallbackEnabled()) {
+      throw error;
+    }
 
-  return response;
+    return getFallbackDirectoryResponse(params);
+  }
 };
 
-export const fetchDoctorDetail = (doctorId: string) =>
-  apiRequest<Doctor>(`/doctors/${doctorId}`, { auth: false });
+export const fetchDoctorDetail = async (doctorId: string) => {
+  try {
+    return await apiRequest<Doctor>(`/doctors/${doctorId}`, { auth: false });
+  } catch (error) {
+    if (!isPublicDirectoryFallbackEnabled()) {
+      throw error;
+    }
 
-export const fetchDoctorAvailability = (doctorId: string) =>
-  apiRequest<Array<{ date: string; slots: string[] }>>(`/doctors/${doctorId}/availability`, {
-    auth: false,
-  });
+    const fallbackDoctor = getFallbackDoctorDetail(doctorId);
+    if (!fallbackDoctor) {
+      throw error;
+    }
+
+    return fallbackDoctor;
+  }
+};
+
+export const fetchDoctorAvailability = async (doctorId: string) => {
+  try {
+    return await apiRequest<Array<{ date: string; slots: string[] }>>(
+      `/doctors/${doctorId}/availability`,
+      {
+        auth: false,
+      },
+    );
+  } catch (error) {
+    if (!isPublicDirectoryFallbackEnabled()) {
+      throw error;
+    }
+
+    const fallbackDoctor = getFallbackDoctorDetail(doctorId);
+    if (!fallbackDoctor) {
+      throw error;
+    }
+
+    return [];
+  }
+};
 
 export const createAppointment = async (payload: CreateAppointmentInput) => {
   const response = await apiRequest<AppointmentResponse>("/appointments", {
