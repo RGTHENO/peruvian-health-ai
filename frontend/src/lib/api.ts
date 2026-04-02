@@ -8,7 +8,27 @@ import type {
   Prescription,
   SurgeryEncounter,
 } from "@/data/encounters";
-import { apiRequest } from "@/lib/api-client";
+import { ApiError, apiRequest } from "@/lib/api-client";
+import {
+  changeDemoPassword,
+  dismissDemoNotification,
+  getDemoCurrentUser,
+  getDemoDoctorAgenda,
+  getDemoDoctorDashboardData,
+  getDemoDoctorPatientRecord,
+  getDemoDoctorPatients,
+  getDemoDoctorProfile,
+  getDemoNotificationPreferences,
+  getDemoNotifications,
+  getDemoPatientHistory,
+  getDemoPatientSelfProfile,
+  getDemoSessionForCredentials,
+  isHostedDemoSessionActive,
+  markAllDemoNotificationsAsRead,
+  markDemoNotificationAsRead,
+  updateDemoDoctorProfile,
+  updateDemoNotificationPreferences,
+} from "@/lib/demo-app-fallback";
 import {
   getFallbackDirectoryResponse,
   getFallbackDoctorDetail,
@@ -414,6 +434,11 @@ const mapNotification = (notification: NotificationResponse): AppNotification =>
 });
 
 export const login = async (payload: LoginInput) => {
+  const demoSession = getDemoSessionForCredentials(payload);
+  if (demoSession) {
+    return demoSession;
+  }
+
   const response = await apiRequest<TokenPairResponse>("/auth/login", {
     method: "POST",
     auth: false,
@@ -452,27 +477,55 @@ export const registerPatient = async (payload: RegisterPatientInput) => {
   };
 };
 
-export const logout = async (refreshToken: string) =>
-  apiRequest<void>("/auth/logout", {
+export const logout = async (refreshToken: string) => {
+  if (isHostedDemoSessionActive()) {
+    return;
+  }
+
+  return apiRequest<void>("/auth/logout", {
     method: "POST",
     body: { refresh_token: refreshToken },
   });
+};
 
-export const fetchCurrentUser = () => apiRequest<AuthUser>("/auth/me");
+export const fetchCurrentUser = async () => {
+  if (isHostedDemoSessionActive()) {
+    const demoUser = getDemoCurrentUser();
+    if (demoUser) {
+      return demoUser;
+    }
+  }
+
+  return apiRequest<AuthUser>("/auth/me");
+};
 
 export const changePassword = (payload: {
   currentPassword: string;
   newPassword: string;
-}) =>
-  apiRequest<void>("/auth/change-password", {
+}) => {
+  if (isHostedDemoSessionActive()) {
+    const result = changeDemoPassword(payload);
+    if (!result.ok) {
+      throw new ApiError(result.message, 400, { detail: result.message });
+    }
+
+    return Promise.resolve();
+  }
+
+  return apiRequest<void>("/auth/change-password", {
     method: "POST",
     body: {
       current_password: payload.currentPassword,
       new_password: payload.newPassword,
     },
   });
+};
 
 export const fetchDirectoryDoctors = async (params: DirectorySearchParams) => {
+  if (isPublicDirectoryFallbackEnabled()) {
+    return getFallbackDirectoryResponse(params);
+  }
+
   const searchParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
@@ -494,6 +547,15 @@ export const fetchDirectoryDoctors = async (params: DirectorySearchParams) => {
 };
 
 export const fetchDoctorDetail = async (doctorId: string) => {
+  if (isPublicDirectoryFallbackEnabled()) {
+    const fallbackDoctor = getFallbackDoctorDetail(doctorId);
+    if (!fallbackDoctor) {
+      throw new ApiError("Doctor no encontrado.", 404, { detail: "Doctor no encontrado." });
+    }
+
+    return fallbackDoctor;
+  }
+
   try {
     return await apiRequest<Doctor>(`/doctors/${doctorId}`, { auth: false });
   } catch (error) {
@@ -511,6 +573,15 @@ export const fetchDoctorDetail = async (doctorId: string) => {
 };
 
 export const fetchDoctorAvailability = async (doctorId: string) => {
+  if (isPublicDirectoryFallbackEnabled()) {
+    const fallbackDoctor = getFallbackDoctorDetail(doctorId);
+    if (!fallbackDoctor) {
+      throw new ApiError("Doctor no encontrado.", 404, { detail: "Doctor no encontrado." });
+    }
+
+    return [];
+  }
+
   try {
     return await apiRequest<Array<{ date: string; slots: string[] }>>(
       `/doctors/${doctorId}/availability`,
@@ -551,6 +622,10 @@ export const createAppointment = async (payload: CreateAppointmentInput) => {
 };
 
 export const fetchDoctorDashboard = async (): Promise<DoctorDashboardData> => {
+  if (isHostedDemoSessionActive()) {
+    return getDemoDoctorDashboardData();
+  }
+
   const response = await apiRequest<DoctorDashboardResponse>("/doctors/me/dashboard");
   return {
     activeDate: response.active_date,
@@ -562,12 +637,20 @@ export const fetchDoctorDashboard = async (): Promise<DoctorDashboardData> => {
 };
 
 export const fetchDoctorAgenda = async (date?: string) => {
+  if (isHostedDemoSessionActive()) {
+    return getDemoDoctorAgenda(date);
+  }
+
   const query = date ? `?date=${encodeURIComponent(date)}` : "";
   const response = await apiRequest<AppointmentResponse[]>(`/doctors/me/agenda${query}`);
   return response.map(mapAppointment);
 };
 
 export const fetchDoctorPatients = async (search?: string) => {
+  if (isHostedDemoSessionActive()) {
+    return getDemoDoctorPatients(search);
+  }
+
   const query = search ? `?search=${encodeURIComponent(search)}` : "";
   const response = await apiRequest<PatientResponse[]>(`/doctors/me/patients${query}`);
   return response.map(mapPatient);
@@ -576,6 +659,10 @@ export const fetchDoctorPatients = async (search?: string) => {
 export const fetchDoctorPatientRecord = async (
   patientId: string,
 ): Promise<DoctorPatientRecordData> => {
+  if (isHostedDemoSessionActive()) {
+    return getDemoDoctorPatientRecord(patientId);
+  }
+
   const response = await apiRequest<DoctorPatientRecordResponse>(
     `/doctors/me/patients/${patientId}`,
   );
@@ -588,6 +675,10 @@ export const fetchDoctorPatientRecord = async (
 };
 
 export const fetchDoctorProfile = async (): Promise<DoctorSettingsProfile> => {
+  if (isHostedDemoSessionActive()) {
+    return getDemoDoctorProfile();
+  }
+
   const response = await apiRequest<DoctorProfileResponse>("/doctors/me/profile");
   return {
     id: response.id,
@@ -599,8 +690,12 @@ export const fetchDoctorProfile = async (): Promise<DoctorSettingsProfile> => {
   };
 };
 
-export const updateDoctorProfile = (payload: DoctorSettingsProfile) =>
-  apiRequest<DoctorProfileResponse>("/doctors/me/profile", {
+export const updateDoctorProfile = (payload: DoctorSettingsProfile) => {
+  if (isHostedDemoSessionActive()) {
+    return Promise.resolve(updateDemoDoctorProfile(payload));
+  }
+
+  return apiRequest<DoctorProfileResponse>("/doctors/me/profile", {
     method: "PATCH",
     body: {
       name: payload.name,
@@ -617,13 +712,22 @@ export const updateDoctorProfile = (payload: DoctorSettingsProfile) =>
     phone: response.phone,
     bio: response.bio,
   }));
+};
 
 export const fetchPatientSelfProfile = async () => {
+  if (isHostedDemoSessionActive()) {
+    return getDemoPatientSelfProfile();
+  }
+
   const response = await apiRequest<PatientResponse>("/patients/me/profile");
   return mapPatient(response);
 };
 
 export const fetchPatientHistory = async () => {
+  if (isHostedDemoSessionActive()) {
+    return getDemoPatientHistory();
+  }
+
   const response = await apiRequest<EncounterResponse[]>("/patients/me/history");
   return response.map(mapEncounter);
 };
@@ -656,12 +760,20 @@ export const createConsultationEncounter = async (
 };
 
 export const fetchNotifications = async () => {
+  if (isHostedDemoSessionActive()) {
+    return getDemoNotifications();
+  }
+
   const response = await apiRequest<NotificationResponse[]>("/notifications");
   return response.map(mapNotification);
 };
 
-export const fetchNotificationPreferences = () =>
-  apiRequest<{
+export const fetchNotificationPreferences = () => {
+  if (isHostedDemoSessionActive()) {
+    return Promise.resolve(getDemoNotificationPreferences());
+  }
+
+  return apiRequest<{
     new_appointment: boolean;
     reminder: boolean;
     cancellation: boolean;
@@ -672,9 +784,14 @@ export const fetchNotificationPreferences = () =>
     cancellation: response.cancellation,
     marketing: response.marketing,
   }));
+};
 
-export const updateNotificationPreferences = (preferences: NotificationPreferences) =>
-  apiRequest<{
+export const updateNotificationPreferences = (preferences: NotificationPreferences) => {
+  if (isHostedDemoSessionActive()) {
+    return Promise.resolve(updateDemoNotificationPreferences(preferences));
+  }
+
+  return apiRequest<{
     new_appointment: boolean;
     reminder: boolean;
     cancellation: boolean;
@@ -693,8 +810,13 @@ export const updateNotificationPreferences = (preferences: NotificationPreferenc
     cancellation: response.cancellation,
     marketing: response.marketing,
   }));
+};
 
 export const markNotificationAsRead = async (notificationId: string) => {
+  if (isHostedDemoSessionActive()) {
+    return markDemoNotificationAsRead(notificationId);
+  }
+
   const response = await apiRequest<NotificationResponse>(`/notifications/${notificationId}/read`, {
     method: "POST",
   });
@@ -702,11 +824,21 @@ export const markNotificationAsRead = async (notificationId: string) => {
 };
 
 export const markAllNotificationsAsRead = async () => {
+  if (isHostedDemoSessionActive()) {
+    return markAllDemoNotificationsAsRead();
+  }
+
   const response = await apiRequest<NotificationResponse[]>("/notifications/read-all", {
     method: "POST",
   });
   return response.map(mapNotification);
 };
 
-export const dismissNotification = (notificationId: string) =>
-  apiRequest<void>(`/notifications/${notificationId}`, { method: "DELETE" });
+export const dismissNotification = (notificationId: string) => {
+  if (isHostedDemoSessionActive()) {
+    dismissDemoNotification(notificationId);
+    return Promise.resolve();
+  }
+
+  return apiRequest<void>(`/notifications/${notificationId}`, { method: "DELETE" });
+};

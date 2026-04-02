@@ -22,6 +22,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api-client";
+import { isHostedFallbackEnabled } from "@/lib/hosted-fallback";
 import { cn } from "@/lib/utils";
 
 const loginSchema = z.object({
@@ -258,6 +259,7 @@ const Login = () => {
   const isBookingResumeFlow = Boolean(safeRedirect?.startsWith("/doctor/"));
   const isDoctorLogin = activeRole === "medico";
   const isRegisterMode = authMode === "registro";
+  const showDemoCredentials = import.meta.env.DEV || isHostedFallbackEnabled();
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -719,10 +721,10 @@ const Login = () => {
               </Form>
             )}
 
-            {import.meta.env.DEV && !isRegisterMode && (
+            {showDemoCredentials && !isRegisterMode && (
               <div className="rounded-2xl border border-dashed border-border/80 bg-transparent px-4 py-3 text-xs leading-relaxed text-slate-500">
                 <p className="font-semibold uppercase tracking-[0.12em] text-slate-400">
-                  Demo local
+                  {import.meta.env.DEV ? "Demo local" : "Acceso demo"}
                 </p>
                 <p className="mt-1">
                   {isDoctorLogin

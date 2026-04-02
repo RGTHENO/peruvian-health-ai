@@ -1,4 +1,5 @@
 import { doctors as demoDoctors, type Doctor } from "@/data/doctors";
+import { isHostedFallbackEnabled } from "@/lib/hosted-fallback";
 
 export interface PublicDirectorySearchParams {
   q?: string;
@@ -11,9 +12,6 @@ interface DirectoryFallbackResponse {
   total: number;
   doctors: Doctor[];
 }
-
-const isLoopbackHost = (hostname: string) =>
-  hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 
 const sortDoctorsByName = (items: Doctor[]) =>
   [...items].sort((left, right) => left.name.localeCompare(right.name, "es"));
@@ -31,13 +29,7 @@ const matchesSearch = (doctor: Doctor, query?: string) => {
   );
 };
 
-export const isPublicDirectoryFallbackEnabled = () => {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return !isLoopbackHost(window.location.hostname);
-};
+export const isPublicDirectoryFallbackEnabled = () => isHostedFallbackEnabled();
 
 export const getFallbackDirectoryResponse = (
   params: PublicDirectorySearchParams,
