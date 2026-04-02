@@ -1,5 +1,5 @@
 import {
-  appointments as demoAppointments,
+  appointments as seededAppointments,
   patients as demoPatients,
   type Appointment,
   type Patient,
@@ -43,6 +43,23 @@ const DEMO_PATIENT_EMAIL = "paciente@saludpe.pe";
 const DEFAULT_DEMO_DOCTOR_EMAIL = "medico@saludpe.pe";
 const DEMO_TOKEN_PREFIX = "demo-access-token:";
 const DEMO_REFRESH_PREFIX = "demo-refresh-token:";
+const DEFAULT_DEMO_AVAILABILITY_SLOTS = ["09:00", "10:00", "11:00", "16:00"] as const;
+
+type DemoAppointmentRecord = Appointment & {
+  doctorId: string;
+  doctorName: string;
+};
+
+type DemoCreateAppointmentInput = {
+  doctorId: string;
+  patientId: string;
+  date: string;
+  time: string;
+  duration?: number;
+  type: Appointment["type"];
+  reason: string;
+  notes?: string;
+};
 
 const dateLabelFormatter = new Intl.DateTimeFormat("es-PE", {
   weekday: "long",
@@ -62,7 +79,7 @@ const clonePatient = (patient: Patient): Patient => ({
   emergencyContact: patient.emergencyContact ? { ...patient.emergencyContact } : undefined,
 });
 
-const cloneAppointment = (appointment: Appointment): Appointment => ({
+const cloneAppointment = <T extends Appointment>(appointment: T): T => ({
   ...appointment,
   delivery: appointment.delivery
     ? {
@@ -72,7 +89,7 @@ const cloneAppointment = (appointment: Appointment): Appointment => ({
         access: { ...appointment.delivery.access },
       }
     : undefined,
-});
+}) as T;
 
 const cloneEncounter = (encounter: Encounter): Encounter =>
   JSON.parse(JSON.stringify(encounter)) as Encounter;
@@ -83,8 +100,22 @@ const normalizeSearchText = (value: string) =>
 const compareDateTime = (left: Appointment, right: Appointment) =>
   `${left.date}T${left.time}`.localeCompare(`${right.date}T${right.time}`);
 
+const formatDateKey = (date: Date) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+
 const pickActiveAgendaDate = () => {
-  const uniqueDates = [...new Set(demoAppointments.map((appointment) => appointment.date))].sort();
+  const uniqueDates = [
+    ...new Set(
+      demoAppointmentStore
+        .filter((appointment) => appointment.doctorId === DEMO_DOCTOR_ID)
+        .map((appointment) => appointment.date),
+    ),
+  ].sort();
+
   if (!uniqueDates.length) {
     return new Date().toISOString().slice(0, 10);
   }
@@ -105,6 +136,14 @@ const getDoctorById = (doctorId: string): Doctor => {
   return doctor;
 };
 
+const DEMO_PRIMARY_DOCTOR = getDoctorById(DEMO_DOCTOR_ID);
+
+let demoAppointmentStore: DemoAppointmentRecord[] = seededAppointments.map((appointment) => ({
+  ...cloneAppointment(appointment),
+  doctorId: DEMO_DOCTOR_ID,
+  doctorName: DEMO_PRIMARY_DOCTOR.name,
+}));
+
 const buildPatientUser = (): AuthUser => ({
   id: "u-patient-1",
   email: DEMO_PATIENT_EMAIL,
@@ -116,8 +155,8 @@ const buildPatientUser = (): AuthUser => ({
 
 let demoDoctorProfile: DoctorSettingsProfile = {
   id: DEMO_DOCTOR_ID,
-  name: getDoctorById(DEMO_DOCTOR_ID).name,
-  specialty: getDoctorById(DEMO_DOCTOR_ID).specialty,
+  name: DEMO_PRIMARY_DOCTOR.name,
+  specialty: DEMO_PRIMARY_DOCTOR.specialty,
   email: DEFAULT_DEMO_DOCTOR_EMAIL,
   phone: "+51 999 888 777",
   bio: "Cardióloga con 15 años de experiencia en el Instituto Nacional Cardiovascular. Especialista en ecocardiografía y prevención cardiovascular.",
@@ -248,16 +287,48 @@ export const getDemoPatientHistory = (): Encounter[] =>
     .filter((encounter) => encounter.patientId === DEMO_PATIENT_ID)
     .map(cloneEncounter);
 
+export const getDemoDoctorAvailability = (doctorId: string) => {
+  const doctor = getDoctorById(doctorId);
+  if (!doctor.available) {
+    return [];
+  }
+
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+
+  return Array.from({ length: 5 }, (_, index) => {
+    const nextDate = new Date(today);
+    nextDate.setDate(today.getDate() + index + 1);
+    const dateKey = formatDateKey(nextDate);
+    const reservedSlots = demoAppointmentStore
+      .filter(
+        (appointment) =>
+          appointment.doctorId === doctorId &&
+          appointment.date === dateKey &&
+          appointment.status !== "cancelada",
+      )
+      .map((appointment) => appointment.time);
+
+    return {
+      date: dateKey,
+      slots: DEFAULT_DEMO_AVAILABILITY_SLOTS.filter((slot) => !reservedSlots.includes(slot)),
+    };
+  }).filter((slotGroup) => slotGroup.slots.length > 0);
+};
+
 export const getDemoDoctorDashboardData = (): DoctorDashboardData => {
   const activeDate = pickActiveAgendaDate();
-  const upcomingToday = demoAppointments
+  const doctorAppointments = demoAppointmentStore.filter(
+    (appointment) => appointment.doctorId === DEMO_DOCTOR_ID,
+  );
+  const upcomingToday = doctorAppointments
     .filter((appointment) => appointment.date === activeDate)
     .sort(compareDateTime)
     .map(cloneAppointment);
 
   const recentPatientIds = [
     ...new Set(
-      [...demoAppointments]
+      [...doctorAppointments]
         .sort((left, right) => compareDateTime(right, left))
         .map((appointment) => appointment.patientId),
     ),
@@ -283,8 +354,11 @@ export const getDemoDoctorDashboardData = (): DoctorDashboardData => {
 };
 
 export const getDemoDoctorAgenda = (date?: string): Appointment[] =>
-  demoAppointments
-    .filter((appointment) => !date || appointment.date === date)
+  demoAppointmentStore
+    .filter(
+      (appointment) =>
+        appointment.doctorId === DEMO_DOCTOR_ID && (!date || appointment.date === date),
+    )
     .sort(compareDateTime)
     .map(cloneAppointment);
 
@@ -316,14 +390,113 @@ export const getDemoDoctorPatientRecord = (patientId: string): DoctorPatientReco
 
   return {
     patient: clonePatient(patient),
-    upcomingAppointments: demoAppointments
-      .filter((appointment) => appointment.patientId === patientId)
+    upcomingAppointments: demoAppointmentStore
+      .filter(
+        (appointment) =>
+          appointment.patientId === patientId && appointment.doctorId === DEMO_DOCTOR_ID,
+      )
       .sort(compareDateTime)
       .map(cloneAppointment),
     encounters: mockEncounters
       .filter((encounter) => encounter.patientId === patientId)
       .map(cloneEncounter),
   };
+};
+
+export const createDemoAppointment = (payload: DemoCreateAppointmentInput): Appointment => {
+  const currentUser = getCurrentDemoUser();
+  if (!currentUser || currentUser.role !== "patient" || currentUser.patient_id !== payload.patientId) {
+    throw new Error("Debes iniciar sesión como paciente para reservar una cita.");
+  }
+
+  const patient = getPatientById(payload.patientId);
+  if (!patient) {
+    throw new Error("Paciente demo no encontrado.");
+  }
+
+  const doctor = getDoctorById(payload.doctorId);
+  const availableSlot = getDemoDoctorAvailability(payload.doctorId).find(
+    (slotGroup) => slotGroup.date === payload.date,
+  );
+
+  if (!availableSlot || !availableSlot.slots.includes(payload.time)) {
+    throw new Error("Ese horario ya no está disponible. Elige otro para continuar.");
+  }
+
+  const patientSummary = getDemoPatientSelfProfile();
+  const appointmentId = `demo-${Date.now()}`;
+  const isTelemedicine = payload.type === "telemedicina";
+  const whatsappEnabled = Boolean(patient.phone?.trim());
+  const telegramEnabled = Boolean(patient.telegramHandle?.trim());
+
+  const appointment: DemoAppointmentRecord = {
+    id: appointmentId,
+    patientId: payload.patientId,
+    patientName: patientSummary.name,
+    doctorId: doctor.id,
+    doctorName: doctor.name,
+    date: payload.date,
+    time: payload.time,
+    duration: payload.duration ?? 30,
+    type: payload.type,
+    status: "en-espera",
+    reason: payload.reason,
+    notes: payload.notes,
+    delivery: {
+      email: {
+        enabled: true,
+        destination: patientSummary.email,
+        status: "scheduled",
+        summary:
+          "Enviaremos la confirmación, el detalle de la cita y el acceso correspondiente por email.",
+      },
+      whatsapp: {
+        enabled: whatsappEnabled,
+        destination: whatsappEnabled ? patient.phone : undefined,
+        status: whatsappEnabled ? "scheduled" : "unavailable",
+        summary: whatsappEnabled
+          ? "Enviaremos resumen y recordatorios por WhatsApp al número registrado."
+          : "Necesitamos un número celular válido para enviar WhatsApp.",
+      },
+      telegram: {
+        enabled: telegramEnabled,
+        destination: telegramEnabled ? patient.telegramHandle : undefined,
+        status: telegramEnabled ? "scheduled" : "unavailable",
+        summary: telegramEnabled
+          ? "Telegram recibirá el mismo resumen y recordatorios del enlace."
+          : "Telegram solo se habilita cuando el paciente vincula su usuario.",
+      },
+      access: {
+        type: payload.type,
+        instructions: isTelemedicine
+          ? "Recibirás el enlace de ingreso y recordatorios por los canales habilitados."
+          : `Preséntate en ${doctor.location} 10 minutos antes de la cita.`,
+        joinUrl: isTelemedicine
+          ? `https://peruhealthai.vercel.app/teleconsulta?appointment=${appointmentId}`
+          : undefined,
+        location: isTelemedicine ? undefined : doctor.location,
+      },
+    },
+  };
+
+  demoAppointmentStore = [...demoAppointmentStore, appointment].sort(compareDateTime);
+
+  if (doctor.id === DEMO_DOCTOR_ID) {
+    demoNotifications = [
+      {
+        id: `demo-booking-${appointmentId}`,
+        type: "appointment",
+        title: "Nueva cita agendada",
+        message: `${patientSummary.name} agendó una consulta para el ${payload.date} a las ${payload.time}.`,
+        timestamp: new Date(),
+        read: false,
+        link: "/doctor/portal/agenda",
+      },
+      ...demoNotifications,
+    ];
+  }
+
+  return cloneAppointment(appointment);
 };
 
 export const getDemoNotifications = (): AppNotification[] =>

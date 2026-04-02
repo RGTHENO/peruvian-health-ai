@@ -129,6 +129,7 @@ const DoctorProfile = () => {
   const bookingMutation = useMutation({
     mutationFn: createAppointment,
     onSuccess: (appointment) => {
+      queryClient.invalidateQueries({ queryKey: ["doctor-availability", doctor?.id] });
       queryClient.invalidateQueries({ queryKey: ["doctor-dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["doctor-agenda"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -187,6 +188,18 @@ const DoctorProfile = () => {
     Boolean(selectedSlot) &&
     Boolean(selectedModality) &&
     bookingReason.trim().length >= 3;
+
+  const bookingButtonLabel = !selectedDate || !selectedSlot
+    ? "Elige fecha y hora"
+    : !selectedModality
+      ? "Elige modalidad"
+      : bookingReason.trim().length < 3
+        ? "Escribe el motivo"
+        : !user
+          ? "Inicia sesión para reservar"
+          : user.role !== "patient" || !user.patient_id
+            ? "Usa una cuenta de paciente"
+            : `Reservar cita${selectedSlot ? ` · ${selectedSlot}` : ""}`;
 
   const selectedDateLabel = selectedDate
     ? format(new Date(`${selectedDate}T12:00:00`), "EEEE d 'de' MMMM", { locale: es })
@@ -511,12 +524,17 @@ const DoctorProfile = () => {
                 <Button
                   className="w-full"
                   size="lg"
-                  disabled={!canBook}
-                  onClick={() => setShowConfirmDialog(true)}
+                  disabled={!canBook || bookingMutation.isPending}
+                  onClick={() => {
+                    if (user?.role === "patient" && user.patient_id) {
+                      setShowConfirmDialog(true);
+                      return;
+                    }
+
+                    handleConfirmBooking();
+                  }}
                 >
-                  {canBook
-                    ? `Reservar a las ${selectedSlot}`
-                    : "Selecciona fecha, horario y motivo"}
+                  {bookingMutation.isPending ? "Reservando..." : bookingButtonLabel}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
                   Pago seguro con Culqi, Yape o Plin

@@ -11,9 +11,11 @@ import type {
 import { ApiError, apiRequest } from "@/lib/api-client";
 import {
   changeDemoPassword,
+  createDemoAppointment,
   dismissDemoNotification,
   getDemoCurrentUser,
   getDemoDoctorAgenda,
+  getDemoDoctorAvailability,
   getDemoDoctorDashboardData,
   getDemoDoctorPatientRecord,
   getDemoDoctorPatients,
@@ -579,7 +581,7 @@ export const fetchDoctorAvailability = async (doctorId: string) => {
       throw new ApiError("Doctor no encontrado.", 404, { detail: "Doctor no encontrado." });
     }
 
-    return [];
+    return getDemoDoctorAvailability(doctorId);
   }
 
   try {
@@ -604,6 +606,15 @@ export const fetchDoctorAvailability = async (doctorId: string) => {
 };
 
 export const createAppointment = async (payload: CreateAppointmentInput) => {
+  if (isHostedDemoSessionActive()) {
+    try {
+      return createDemoAppointment(payload);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo registrar la cita.";
+      throw new ApiError(message, 400, { detail: message });
+    }
+  }
+
   const response = await apiRequest<AppointmentResponse>("/appointments", {
     method: "POST",
     body: {

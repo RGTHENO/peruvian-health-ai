@@ -1,11 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
+  createDemoAppointment,
+  getDemoDoctorAvailability,
   getDemoDoctorDashboardData,
   getDemoDoctorPatients,
   getDemoNotifications,
   getDemoPatientHistory,
   updateDemoNotificationPreferences,
 } from "@/lib/demo-app-fallback";
+import { setStoredSession } from "@/lib/auth-session";
+
+afterEach(() => {
+  setStoredSession(null);
+});
 
 describe("demo app fallback", () => {
   it("builds a doctor dashboard from the local demo data", () => {
@@ -51,5 +58,44 @@ describe("demo app fallback", () => {
 
     expect(notifications.length).toBeGreaterThan(0);
     expect(notifications[0].timestamp).toBeInstanceOf(Date);
+  });
+
+  it("creates a demo appointment and removes the booked slot from availability", () => {
+    setStoredSession({
+      accessToken: "demo-access-token:patient",
+      refreshToken: "demo-refresh-token:patient",
+      expiresIn: 86_400,
+      user: {
+        id: "u-patient-1",
+        email: "paciente@saludpe.pe",
+        full_name: "Juan Pérez Sánchez",
+        role: "patient",
+        doctor_id: null,
+        patient_id: "p1",
+      },
+    });
+
+    const availabilityBefore = getDemoDoctorAvailability("2");
+    expect(availabilityBefore.length).toBeGreaterThan(0);
+
+    const { date, slots } = availabilityBefore[0];
+    expect(slots.length).toBeGreaterThan(0);
+
+    const appointment = createDemoAppointment({
+      doctorId: "2",
+      patientId: "p1",
+      date,
+      time: slots[0],
+      type: "telemedicina",
+      reason: "Consulta general",
+    });
+
+    expect(appointment.status).toBe("en-espera");
+    expect(appointment.delivery?.access.type).toBe("telemedicina");
+
+    const availabilityAfter = getDemoDoctorAvailability("2");
+    const sameDate = availabilityAfter.find((slotGroup) => slotGroup.date === date);
+
+    expect(sameDate?.slots.includes(slots[0])).toBe(false);
   });
 });
