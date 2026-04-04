@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "https://industry-fees-predictions-pike.trycloudflare.com/api/v1/:path*"
+      "destination": "https://patients-critics-hamburg-dam.trycloudflare.com/api/v1/:path*"
     },
     {
       "source": "/(.*)",
